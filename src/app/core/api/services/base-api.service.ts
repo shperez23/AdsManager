@@ -26,7 +26,7 @@ export class BaseApiService {
         headers: options?.headers,
         params: this.buildParams(options?.params),
       })
-      .pipe(catchError((error: HttpErrorResponse) => this.handleError(error)));
+      .pipe(catchError((error: unknown) => this.handleError(error)));
   }
 
   post<TResponse, TPayload = unknown>(
@@ -39,7 +39,7 @@ export class BaseApiService {
         headers: options?.headers,
         params: this.buildParams(options?.params),
       })
-      .pipe(catchError((error: HttpErrorResponse) => this.handleError(error)));
+      .pipe(catchError((error: unknown) => this.handleError(error)));
   }
 
   put<TResponse, TPayload = unknown>(
@@ -52,7 +52,7 @@ export class BaseApiService {
         headers: options?.headers,
         params: this.buildParams(options?.params),
       })
-      .pipe(catchError((error: HttpErrorResponse) => this.handleError(error)));
+      .pipe(catchError((error: unknown) => this.handleError(error)));
   }
 
   delete<T>(endpoint: string, options?: BaseApiRequestOptions): Observable<T> {
@@ -61,7 +61,7 @@ export class BaseApiService {
         headers: options?.headers,
         params: this.buildParams(options?.params),
       })
-      .pipe(catchError((error: HttpErrorResponse) => this.handleError(error)));
+      .pipe(catchError((error: unknown) => this.handleError(error)));
   }
 
   private buildUrl(endpoint: string): string {
@@ -94,12 +94,31 @@ export class BaseApiService {
     return httpParams;
   }
 
-  private handleError(error: HttpErrorResponse): Observable<never> {
+  private handleError(error: unknown): Observable<never> {
+    if (error instanceof HttpErrorResponse) {
+      const apiError = {
+        status: error.status,
+        message: error.error?.message ?? error.message ?? 'Unexpected API error',
+        details: error.error,
+        url: error.url ?? undefined,
+      };
+
+      return throwError(() => apiError);
+    }
+
+    const mappedError = error as {
+      status?: number;
+      message?: string;
+      userMessage?: string;
+      details?: unknown;
+      url?: string;
+    };
+
     const apiError = {
-      status: error.status,
-      message: error.error?.message ?? error.message ?? 'Unexpected API error',
-      details: error.error,
-      url: error.url ?? undefined,
+      status: mappedError.status ?? 0,
+      message: mappedError.userMessage ?? mappedError.message ?? 'Unexpected API error',
+      details: mappedError.details ?? error,
+      url: mappedError.url,
     };
 
     return throwError(() => apiError);
