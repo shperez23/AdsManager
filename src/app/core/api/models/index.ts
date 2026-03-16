@@ -5,3 +5,5 @@ export * from './insights-response.model';
 export * from './pagination-request.model';
 export * from './pagination-response.model';
 export * from './sort-direction.enum';
+export * from './ad-accounts-actions.model';
+export * from './ad-accounts-query-params.model';
