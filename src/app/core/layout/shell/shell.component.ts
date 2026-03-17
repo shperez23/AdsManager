@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
+import { ToastContainerComponent } from '../../../shared/ui/toast/toast-container.component';
+
 interface NavigationItem {
   readonly label: string;
   readonly route: string;
@@ -10,7 +12,7 @@ interface NavigationItem {
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ToastContainerComponent],
   templateUrl: './shell.component.html',
 })
 export class ShellComponent {
