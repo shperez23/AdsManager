@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 import {
   Ad,
@@ -10,6 +10,7 @@ import {
   UpdateAdRequest,
 } from '../../../shared/models';
 import { BaseApiService } from './base-api.service';
+import { normalizeInsightsResponse } from '../../../shared/utils/insights.util';
 
 @Injectable({
   providedIn: 'root',
@@ -44,8 +45,10 @@ export class AdsService {
   }
 
   getAdInsights(id: string, dateFrom?: string, dateTo?: string): Observable<InsightsResponse> {
-    return this.baseApiService.get<InsightsResponse>(`${this.endpoint}/${id}/insights`, {
-      params: { dateFrom, dateTo },
-    });
+    return this.baseApiService
+      .get<unknown>(`${this.endpoint}/${id}/insights`, {
+        params: { dateFrom, dateTo },
+      })
+      .pipe(map((response) => normalizeInsightsResponse(response)));
   }
 }

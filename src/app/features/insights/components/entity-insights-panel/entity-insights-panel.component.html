@@ -14,7 +14,7 @@
 
     <label class="text-xs font-medium text-slate-600">
       Desde
-      <input [(ngModel)]="startDate" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+      <input [(ngModel)]="startDate" [max]="endDate" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
     </label>
 
     <label class="text-xs font-medium text-slate-600">
@@ -34,7 +34,7 @@
 
   <p *ngIf="errorMessage" class="mb-3 text-sm text-red-600">{{ errorMessage }}</p>
 
-  <div class="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+  <div class="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
     <article class="rounded-lg border border-slate-200 p-3">
       <p class="text-xs text-slate-500">Impresiones</p>
       <p class="text-lg font-semibold text-slate-900">{{ totalImpressions | number }}</p>
@@ -50,6 +50,14 @@
     <article class="rounded-lg border border-slate-200 p-3">
       <p class="text-xs text-slate-500">Spend</p>
       <p class="text-lg font-semibold text-slate-900">{{ totalSpend | currency: 'USD' : 'symbol' : '1.2-2' }}</p>
+    </article>
+    <article class="rounded-lg border border-slate-200 p-3">
+      <p class="text-xs text-slate-500">CTR prom.</p>
+      <p class="text-lg font-semibold text-slate-900">{{ averageCtr | number: '1.2-2' }}%</p>
+    </article>
+    <article class="rounded-lg border border-slate-200 p-3">
+      <p class="text-xs text-slate-500">CPC prom.</p>
+      <p class="text-lg font-semibold text-slate-900">{{ averageCpc | currency: 'USD' : 'symbol' : '1.2-2' }}</p>
     </article>
   </div>
 
@@ -74,6 +82,8 @@
           <th class="px-3 py-2 text-left">Impresiones</th>
           <th class="px-3 py-2 text-left">Clicks</th>
           <th class="px-3 py-2 text-left">Spend</th>
+          <th class="px-3 py-2 text-left">CTR</th>
+          <th class="px-3 py-2 text-left">CPC</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-200 bg-white">
@@ -83,6 +93,8 @@
           <td class="px-3 py-2">{{ row.impressions | number }}</td>
           <td class="px-3 py-2">{{ row.clicks | number }}</td>
           <td class="px-3 py-2">{{ row.spend | number: '1.0-2' }}</td>
+          <td class="px-3 py-2">{{ (row.ctr ?? 0) | number: '1.2-2' }}%</td>
+          <td class="px-3 py-2">{{ (row.cpc ?? 0) | number: '1.2-2' }}</td>
         </tr>
       </tbody>
     </table>

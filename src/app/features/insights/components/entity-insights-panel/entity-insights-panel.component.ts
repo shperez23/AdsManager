@@ -1,5 +1,5 @@
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, Input, OnDestroy, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subject, finalize, forkJoin, takeUntil } from 'rxjs';
 
@@ -7,6 +7,7 @@ import { AdsService } from '../../../../core/api/services/ads.service';
 import { AdSetsService } from '../../../../core/api/services/adsets.service';
 import { CampaignsService } from '../../../../core/api/services/campaigns.service';
 import { InsightMetrics } from '../../../../shared/models';
+import { createDefaultDateRange } from '../../../../shared/utils/insights.util';
 
 type InsightsEntityLevel = 'campaigns' | 'adsets' | 'ads';
 
@@ -22,16 +23,16 @@ interface InsightsEntityOption {
   imports: [CommonModule, FormsModule, CurrencyPipe],
   templateUrl: './entity-insights-panel.component.html',
 })
-export class EntityInsightsPanelComponent implements AfterViewInit, OnDestroy {
+export class EntityInsightsPanelComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input({ required: true }) entityLevel: InsightsEntityLevel = 'campaigns';
 
   @ViewChild('impressionsCanvas') private impressionsCanvas?: ElementRef<HTMLCanvasElement>;
   @ViewChild('spendCanvas') private spendCanvas?: ElementRef<HTMLCanvasElement>;
 
-  readonly today = this.toDateInput(new Date());
+  readonly today = createDefaultDateRange(0).dateTo;
 
-  startDate = this.toDateInput(this.addDays(new Date(), -7));
-  endDate = this.today;
+  startDate = createDefaultDateRange(7).dateFrom;
+  endDate = createDefaultDateRange(7).dateTo;
 
   options: InsightsEntityOption[] = [];
   selectedEntityId = '';
@@ -53,6 +54,20 @@ export class EntityInsightsPanelComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     this.loadEntityOptions();
   }
+
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (!changes['entityLevel'] || changes['entityLevel'].firstChange || !this.impressionsCanvas) {
+      return;
+    }
+
+    this.rows = [];
+    this.options = [];
+    this.selectedEntityId = '';
+    this.destroyCharts();
+    this.loadEntityOptions();
+  }
+
 
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -87,6 +102,26 @@ export class EntityInsightsPanelComponent implements AfterViewInit, OnDestroy {
   get totalSpend(): number {
     return this.rows.reduce((acc, row) => acc + row.spend, 0);
   }
+
+
+  get averageCtr(): number {
+    if (!this.rows.length) {
+      return 0;
+    }
+
+    const totalCtr = this.rows.reduce((acc, row) => acc + (row.ctr ?? 0), 0);
+    return totalCtr / this.rows.length;
+  }
+
+  get averageCpc(): number {
+    if (!this.rows.length) {
+      return 0;
+    }
+
+    const totalCpc = this.rows.reduce((acc, row) => acc + (row.cpc ?? 0), 0);
+    return totalCpc / this.rows.length;
+  }
+
 
   onApply(): void {
     if (this.startDate > this.endDate) {
@@ -257,13 +292,4 @@ export class EntityInsightsPanelComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  private toDateInput(date: Date): string {
-    return date.toISOString().slice(0, 10);
-  }
-
-  private addDays(date: Date, days: number): Date {
-    const nextDate = new Date(date);
-    nextDate.setDate(nextDate.getDate() + days);
-    return nextDate;
-  }
 }

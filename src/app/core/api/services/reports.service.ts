@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 import {
   DashboardSummary,
@@ -7,6 +7,7 @@ import {
   PaginationQueryParams,
 } from '../../../shared/models';
 import { BaseApiService } from './base-api.service';
+import { normalizeInsightsResponse } from '../../../shared/utils/insights.util';
 
 export interface InsightsReportQueryParams extends PaginationQueryParams {
   dateFrom?: string;
@@ -22,7 +23,9 @@ export class ReportsService {
   constructor(private readonly baseApiService: BaseApiService) {}
 
   getInsightsReport(params?: InsightsReportQueryParams): Observable<InsightsResponse> {
-    return this.baseApiService.get<InsightsResponse>(`${this.endpoint}/insights`, { params });
+    return this.baseApiService
+      .get<unknown>(`${this.endpoint}/insights`, { params })
+      .pipe(map((response) => normalizeInsightsResponse(response)));
   }
 
   getDashboardReport(dateFrom?: string, dateTo?: string): Observable<DashboardSummary> {
