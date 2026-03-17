@@ -1,116 +1,116 @@
-# Análisis de cobertura Frontend (Angular) vs Swagger
+# Contrato OpenAPI canónico para frontend (Angular)
 
-## Arquitectura frontend observada
+## 1) Lectura arquitectónica del frontend actual
 
-- Arquitectura **modular por feature** (`src/app/features/*`) con componentes `standalone` y separación por `pages` + `components`.
-- Capa de acceso API centralizada en `src/app/core/api/services/*`.
-- Modelos DTO compartidos en `src/app/shared/models`.
-- Patrón dominante: **Presentación (componentes) + Servicios API (infraestructura)**, sin estado global complejo.
+- Arquitectura **modular por dominio/feature** en `src/app/features/*` (dashboard, ad-accounts, ads, ad-sets, campaigns, insights).
+- Capa de infraestructura HTTP centralizada en `src/app/core/api/services/*` mediante `BaseApiService`.
+- Convención de versionado ya adoptada por frontend: `API_BASE_URL = {apiUrl}/api/{apiVersion}` y `apiVersion: 'v1'` en environments.
+- Conclusión de contrato: el frontend está diseñado para consumir rutas **`/api/v1/*`** como fuente de verdad, no rutas legacy sin versión (`/api/*`).
 
-## Recursos expuestos en Swagger (normalizados)
+## 2) Duplicados, versionado y deprecación detectados en `swagger.json`
 
-Swagger incluye recursos para:
+Patrón global del swagger:
 
-- `adaccounts`
-- `ads`
-- `adsets`
-- `campaigns`
-- `dashboard`
-- `auth`
-- `meta/*`
-- `reports/*`
-- `rules`
+- Casi todos los recursos están duplicados en dos variantes equivalentes:
+  - Versionada: `/api/v1/...`
+  - Legacy: `/api/...`
+- En `reports/dashboard` ambas variantes (`/api/v1/reports/dashboard` y `/api/reports/dashboard`) están marcadas como `deprecated: true`.
 
-## Páginas UI existentes en `src/app/features`
+### Decisión canónica para dashboard
 
-- `dashboard`
-- `ad-accounts`
-- `ads`
-- `ad-sets`
+Entre:
 
-Rutas registradas:
+- `/api/v1/dashboard`
+- `/api/v1/reports/dashboard`
 
-- `/` → dashboard
-- `/ad-accounts`
-- `/ads`
-- `/ad-sets`
-- `/insights` (reusa `AdsPageComponent`)
+**Canónico frontend: `/api/v1/dashboard`**.
 
-## Resultado de cobertura
+Motivo:
 
-### 1) Verificar si existen páginas para cada recurso
+1. `reports/dashboard` está explícitamente deprecado en swagger.
+2. El frontend ya tiene `DashboardService` apuntando a `dashboard` (no a `reports/dashboard`).
+3. Mantiene separación semántica: `dashboard` para resumen ejecutivo; `reports/*` para reporting analítico.
 
-| Recurso Swagger | Página/UI en `features` | Estado |
-|---|---|---|
-| adaccounts | Sí (`ad-accounts`) | ✅ |
-| ads | Sí (`ads`) | ✅ |
-| adsets | Sí (`ad-sets`) | ✅ |
-| campaigns | No | ❌ Falta |
-| dashboard | Sí (`dashboard`) | ⚠️ Parcial (sin consumo API dashboard) |
-| auth | No | ❌ Falta |
-| meta/* | No | ❌ Falta |
-| reports/* | No | ❌ Falta |
-| rules | No | ❌ Falta |
+## 3) Endpoints equivalentes detectados (mismo recurso, doble ruta)
 
-### 2) CRUD completo por recurso funcional principal
+Los siguientes pares son equivalentes funcionalmente y deben consolidarse al contrato versionado `/api/v1/*`:
 
-| Recurso | Create | Read listado | Read detalle | Update | Delete | Estado |
-|---|---|---|---|---|---|---|
-| adaccounts | No (solo import/sync) | Sí | No endpoint dedicado en UI | No | No | ⚠️ Incompleto |
-| ads | Sí | Sí | No vista dedicada (solo selección e insights) | Sí | No (Swagger tampoco expone delete) | ⚠️ Parcial |
-| adsets | Sí | Sí | No vista dedicada | Sí | No (Swagger tampoco expone delete) | ⚠️ Parcial |
-| campaigns | No UI | No UI | No UI | No UI | No UI | ❌ No implementado |
+- `adaccounts`: `/api/v1/adaccounts` ↔ `/api/adaccounts`
+- `ads`: `/api/v1/ads*` ↔ `/api/ads*`
+- `adsets`: `/api/v1/adsets*` ↔ `/api/adsets*`
+- `auth`: `/api/v1/auth*` ↔ `/api/auth*`
+- `campaigns`: `/api/v1/campaigns*` ↔ `/api/campaigns*`
+- `dashboard`: `/api/v1/dashboard` ↔ `/api/dashboard`
+- `meta`: `/api/v1/meta/*` ↔ `/api/meta/*`
+- `reports/insights`: `/api/v1/reports/insights` ↔ `/api/reports/insights`
+- `rules`: `/api/v1/rules*` ↔ `/api/rules*`
 
-### 3) Acciones específicas
+## 4) Rutas que deben quedar activas en frontend
 
-| Acción | adaccounts | ads | adsets | campaigns |
-|---|---|---|---|---|
-| pause | N/A en Swagger | ✅ UI | ✅ UI | ❌ No UI |
-| activate | N/A en Swagger | ✅ UI | ✅ UI | ❌ No UI |
-| sync | ✅ UI (adaccounts) | ❌ | ❌ | ❌ |
-| insights | ❌ (meta insights no expuesto) | ✅ UI | ❌ UI (aunque servicio existe) | ❌ No UI |
+**Regla de oro**:
 
-### 4) Paginación
+- ✅ Activo: sólo rutas `/api/v1/*` no deprecadas.
+- ⚠️ Deprecated: rutas marcadas deprecated en swagger (aunque existan en v1).
+- ❌ No usar: rutas legacy `/api/*` sin versión.
 
-- **Implementada** en listados de `adaccounts`, `ads`, `adsets` (page/pageSize/totalPages y controles prev/next + numeración).
-- **No implementada** para recursos sin pantalla (`campaigns`, `rules`, `meta/connections`, etc.).
+## 5) Matriz final (fuente de verdad frontend)
 
-### 5) Filtros
+| Módulo | Endpoint canónico | Método | Status |
+|---|---|---|---|
+| dashboard | `/api/v1/dashboard` | GET | activo |
+| reports | `/api/v1/reports/dashboard` | GET | deprecated |
+| reports | `/api/v1/reports/insights` | GET | activo |
+| adaccounts | `/api/v1/adaccounts` | GET | activo |
+| adaccounts | `/api/v1/adaccounts/import-from-meta` | POST | activo |
+| adaccounts | `/api/v1/adaccounts/{id}/sync` | POST | activo |
+| ads | `/api/v1/ads` | GET | activo |
+| ads | `/api/v1/ads` | POST | activo |
+| ads | `/api/v1/ads/{id}` | GET | activo |
+| ads | `/api/v1/ads/{id}` | PUT | activo |
+| ads | `/api/v1/ads/{id}/insights` | GET | activo |
+| ads | `/api/v1/ads/{id}/pause` | PUT | activo |
+| ads | `/api/v1/ads/{id}/activate` | PUT | activo |
+| adsets | `/api/v1/adsets` | GET | activo |
+| adsets | `/api/v1/adsets` | POST | activo |
+| adsets | `/api/v1/adsets/{id}` | GET | activo |
+| adsets | `/api/v1/adsets/{id}` | PUT | activo |
+| adsets | `/api/v1/adsets/{id}/insights` | GET | activo |
+| adsets | `/api/v1/adsets/{id}/pause` | PUT | activo |
+| adsets | `/api/v1/adsets/{id}/activate` | PUT | activo |
+| campaigns | `/api/v1/campaigns` | GET | activo |
+| campaigns | `/api/v1/campaigns` | POST | activo |
+| campaigns | `/api/v1/campaigns/{id}` | GET | activo |
+| campaigns | `/api/v1/campaigns/{id}` | PUT | activo |
+| campaigns | `/api/v1/campaigns/{id}/insights` | GET | activo |
+| campaigns | `/api/v1/campaigns/{id}/pause` | PUT | activo |
+| campaigns | `/api/v1/campaigns/{id}/activate` | PUT | activo |
+| auth | `/api/v1/auth/register` | POST | activo |
+| auth | `/api/v1/auth/login` | POST | activo |
+| auth | `/api/v1/auth/refresh` | POST | activo |
+| auth | `/api/v1/auth/me` | GET | activo |
+| meta | `/api/v1/meta/ad-accounts` | GET | activo |
+| meta | `/api/v1/meta/ad-accounts/{adAccountId}/campaigns` | GET | activo |
+| meta | `/api/v1/meta/ad-accounts/{adAccountId}/campaigns` | POST | activo |
+| meta | `/api/v1/meta/campaigns/status` | PATCH | activo |
+| meta | `/api/v1/meta/ad-accounts/{adAccountId}/adsets` | POST | activo |
+| meta | `/api/v1/meta/ads` | POST | activo |
+| meta | `/api/v1/meta/ad-accounts/{adAccountId}/insights` | GET | activo |
+| meta-connections | `/api/v1/meta/connections` | GET | activo |
+| meta-connections | `/api/v1/meta/connections` | POST | activo |
+| meta-connections | `/api/v1/meta/connections/{id}` | PUT | activo |
+| meta-connections | `/api/v1/meta/connections/{id}` | DELETE | activo |
+| meta-connections | `/api/v1/meta/connections/{id}/refresh-token` | POST | activo |
+| meta-connections | `/api/v1/meta/connections/{id}/validate` | POST | activo |
+| rules | `/api/v1/rules` | GET | activo |
+| rules | `/api/v1/rules` | POST | activo |
+| rules | `/api/v1/rules/{id}` | PUT | activo |
+| rules | `/api/v1/rules/{id}/activate` | PUT | activo |
+| rules | `/api/v1/rules/{id}/deactivate` | PUT | activo |
+| global-legacy | `/api/*` (sin `/v1`) | ALL | no usar |
 
-- `adaccounts`: búsqueda + status + ordenamiento.
-- `ads`: búsqueda + status.
-- `adsets`: búsqueda + status.
+## 6) Política operativa recomendada para frontend
 
-**Faltantes respecto a Swagger**:
-
-- Filtro `CampaignId` (swagger lo soporta en `ads` y `adsets`) no expuesto en UI.
-- Ordenamiento `SortBy/SortDirection` para `ads` y `adsets` no expuesto en UI (sí en adaccounts).
-- Filtros para `campaigns` (`AdAccountId`, status, búsqueda, orden) no implementados por ausencia de pantalla.
-
-## Funcionalidades UI faltantes
-
-1. Módulo/páginas de `campaigns` (listado, alta, edición, acciones y insights).
-2. Módulo de autenticación (`login/register/refresh/me`).
-3. Pantallas para `meta connections` (CRUD + validate + refresh token).
-4. Flujos `reports` (`/reports/insights`, `/reports/dashboard`).
-5. Pantallas para `rules` (listado, crear, editar, activar/desactivar).
-6. Integración real de `/dashboard` API (actualmente dashboard es mock estático).
-
-## Pantallas incompletas
-
-1. `dashboard`: sin consumo de endpoint `/api/dashboard`.
-2. `ad-accounts`: botón “Ver detalle” sin navegación/estado que renderice `AdaccountDetailComponent`.
-3. `ad-accounts detail`: carga solo adaccount por listado y deja `ads`/`adSets` vacíos; no consume endpoints específicos de detalle/relación.
-4. `ads`: columna `Spend` sin dato real, muestra “—”.
-5. `adsets`: sin acción de insights en UI pese a tener método de servicio.
-
-## Acciones no implementadas (UI)
-
-- `campaigns/{id}/pause`
-- `campaigns/{id}/activate`
-- `campaigns/{id}/insights`
-- `adsets/{id}/insights` (servicio sí, UI no)
-- `meta/*` operativas (status patch, creación de campañas/adsets/ads en Meta, insights de ad-account Meta)
-- `rules/{id}/activate`
-- `rules/{id}/deactivate`
-
+1. Consumir exclusivamente `/api/v1/*`.
+2. Retirar dependencias de `ReportsService.getDashboardReport()` al migrar completamente a `DashboardService`.
+3. Considerar las rutas `/api/reports/dashboard` y `/api/v1/reports/dashboard` como transición legacy/deprecated.
+4. Mantener esta matriz como contrato canónico hasta que backend publique OpenAPI sin duplicados de versión.
