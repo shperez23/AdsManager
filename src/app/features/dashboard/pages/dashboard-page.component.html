@@ -11,6 +11,22 @@
   </div>
 
   <article class="rounded-2xl border border-white/10 bg-slate-900/40 p-5">
+    <h2 class="text-base font-semibold text-white">Sistema de toast notifications</h2>
+    <p class="mt-2 text-sm text-slate-300">Dispara una notificación de cada tipo para validar estilos y comportamiento.</p>
+
+    <div class="mt-4 flex flex-wrap gap-2">
+      <button
+        *ngFor="let action of toastActions"
+        type="button"
+        class="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-100 transition hover:bg-white/10"
+        (click)="showToast(action.type)"
+      >
+        {{ action.label }}
+      </button>
+    </div>
+  </article>
+
+  <article class="rounded-2xl border border-white/10 bg-slate-900/40 p-5">
     <h2 class="text-base font-semibold text-white">Content Area</h2>
     <p class="mt-2 text-sm text-slate-300">
       Este bloque representa el área principal para renderizar tablas, gráficas e insights de campañas.
