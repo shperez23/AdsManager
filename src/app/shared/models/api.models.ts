@@ -299,8 +299,16 @@ export interface InsightMetrics {
   ctr?: number;
   cpc?: number;
   cpm?: number;
+  reach?: number;
+  frequency?: number;
+  actions?: Record<string, number>;
 }
 
 export interface InsightsResponse {
+  accountId?: string;
+  campaignId?: string;
+  adSetId?: string;
+  adId?: string;
+  currency?: string;
   rows: InsightMetrics[];
 }

@@ -1,10 +1,24 @@
 <div class="space-y-4">
   <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
     <h2 class="text-lg font-semibold text-slate-900">Insights</h2>
-    <p class="mt-1 text-sm text-slate-600">Consulta insights agregados y luego profundiza por anuncio.</p>
+    <p class="mt-1 text-sm text-slate-600">Consulta insights por campaigns, ad sets y ads con filtros de fecha consistentes.</p>
+
+    <div class="mt-4 flex flex-wrap gap-2">
+      <button
+        *ngFor="let tab of tabs"
+        type="button"
+        class="rounded-lg border px-3 py-1.5 text-sm font-medium"
+        [ngClass]="
+          selectedTab === tab.key
+            ? 'border-blue-600 bg-blue-600 text-white'
+            : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+        "
+        (click)="onSelectTab(tab.key)"
+      >
+        {{ tab.label }}
+      </button>
+    </div>
   </section>
 
-  <app-insights-summary></app-insights-summary>
-
-  <app-ads-list></app-ads-list>
+  <app-entity-insights-panel [entityLevel]="selectedTab"></app-entity-insights-panel>
 </div>
