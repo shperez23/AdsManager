@@ -6,7 +6,7 @@ import {
   CreateAdRequest,
   InsightsResponse,
   PaginatedResponse,
-  PaginationQueryParams,
+  AdsQueryParams,
   UpdateAdRequest,
 } from '../../../shared/models';
 import { BaseApiService } from './base-api.service';
@@ -19,7 +19,7 @@ export class AdsService {
 
   constructor(private readonly baseApiService: BaseApiService) {}
 
-  getAds(params?: PaginationQueryParams): Observable<PaginatedResponse<Ad>> {
+  getAds(params?: AdsQueryParams): Observable<PaginatedResponse<Ad>> {
     return this.baseApiService.get<PaginatedResponse<Ad>>(this.endpoint, { params });
   }
 

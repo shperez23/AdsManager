@@ -1,11 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 
-import { AdsetsListComponent } from '../components/adsets-list/adsets-list.component';
-import { AdSet, CreateAdSetRequest, UpdateAdSetRequest } from '../../../shared/models';
 import { AdSetsService } from '../../../core/api/services/adsets.service';
+import { ToastService } from '../../../core/notifications/toast.service';
+import { AdSet, CreateAdSetRequest, UpdateAdSetRequest } from '../../../shared/models';
+import { AdsetsListComponent } from '../components/adsets-list/adsets-list.component';
 
 @Component({
   selector: 'app-ad-sets-page',
@@ -24,7 +26,12 @@ export class AdSetsPageComponent {
     dailyBudget: new FormControl(0, { nonNullable: true }),
   });
 
-  constructor(private readonly adSetsService: AdSetsService) {}
+  private readonly destroyRef = inject(DestroyRef);
+
+  constructor(
+    private readonly adSetsService: AdSetsService,
+    private readonly toastService: ToastService,
+  ) {}
 
   onEditAdSet(adSet: AdSet): void {
     this.selectedAdSet = adSet;
@@ -45,14 +52,23 @@ export class AdSetsPageComponent {
           name: value.name,
           status: value.status,
           budget: value.dailyBudget,
-        } as UpdateAdSetRequest)
+        } satisfies UpdateAdSetRequest)
       : this.adSetsService.createAdSet(value as CreateAdSetRequest);
 
-    request$.pipe(finalize(() => (this.isSubmitting = false))).subscribe({
-      next: () => {
-        this.selectedAdSet = null;
-        this.form.reset({ campaignId: '', name: '', status: 'ACTIVE', dailyBudget: 0 });
-      },
-    });
+    request$
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => (this.isSubmitting = false)),
+      )
+      .subscribe({
+        next: () => {
+          this.selectedAdSet = null;
+          this.form.reset({ campaignId: '', name: '', status: 'ACTIVE', dailyBudget: 0 });
+          this.toastService.success({ title: 'Ad Sets', message: 'Registro guardado correctamente.' });
+        },
+        error: () => {
+          this.toastService.error({ title: 'Ad Sets', message: 'No se pudo guardar el ad set.' });
+        },
+      });
   }
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { AdAccount, PaginatedResponse, PaginationQueryParams } from '../../../shared/models';
+import { AdAccount, PaginatedResponse, AdAccountsQueryParams } from '../../../shared/models';
 import { BaseApiService } from './base-api.service';
 
 @Injectable({
@@ -12,7 +12,7 @@ export class AdAccountsService {
 
   constructor(private readonly baseApiService: BaseApiService) {}
 
-  getAdAccounts(params?: PaginationQueryParams): Observable<PaginatedResponse<AdAccount>> {
+  getAdAccounts(params?: AdAccountsQueryParams): Observable<PaginatedResponse<AdAccount>> {
     return this.baseApiService.get<PaginatedResponse<AdAccount>>(this.endpoint, { params });
   }
 

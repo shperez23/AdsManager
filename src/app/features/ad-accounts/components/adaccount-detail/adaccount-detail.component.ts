@@ -1,9 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, finalize, forkJoin, takeUntil } from 'rxjs';
 
-import { Ad, AdAccount, AdSet } from '../../../../shared/models';
+import { AdsService } from '../../../../core/api/services/ads.service';
 import { AdAccountsService } from '../../../../core/api/services/adaccounts.service';
+import { AdSetsService } from '../../../../core/api/services/adsets.service';
+import { Ad, AdAccount, AdSet } from '../../../../shared/models';
 
 @Component({
   selector: 'app-adaccount-detail',
@@ -23,7 +25,11 @@ export class AdaccountDetailComponent implements OnChanges, OnDestroy {
 
   private readonly destroy$ = new Subject<void>();
 
-  constructor(private readonly adAccountsService: AdAccountsService) {}
+  constructor(
+    private readonly adAccountsService: AdAccountsService,
+    private readonly adsService: AdsService,
+    private readonly adSetsService: AdSetsService,
+  ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (!changes['adAccountId']) {
@@ -55,20 +61,26 @@ export class AdaccountDetailComponent implements OnChanges, OnDestroy {
     this.isLoading = true;
     this.errorMessage = null;
 
-    this.adAccountsService
-      .getAdAccounts({ Page: 1, PageSize: 100 })
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: ({ items }) => {
-          this.adAccount = items.find((item) => item.id === id) ?? null;
-          this.ads = [];
-          this.adSets = [];
+    forkJoin({
+      adAccounts: this.adAccountsService.getAdAccounts({ Page: 1, PageSize: 100, Search: id }),
+      ads: this.adsService.getAds({ Page: 1, PageSize: 10, Search: id }),
+      adSets: this.adSetsService.getAdSets({ Page: 1, PageSize: 10, Search: id }),
+    })
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
           this.isLoading = false;
+        }),
+      )
+      .subscribe({
+        next: ({ adAccounts, ads, adSets }) => {
+          this.adAccount = adAccounts.items.find((item) => item.id === id) ?? null;
+          this.ads = ads.items;
+          this.adSets = adSets.items;
         },
         error: () => {
           this.errorMessage = 'No se pudo cargar el detalle del AdAccount.';
           this.resetState();
-          this.isLoading = false;
         },
       });
   }
