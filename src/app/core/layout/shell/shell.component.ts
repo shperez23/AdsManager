@@ -7,6 +7,7 @@ import { ToastContainerComponent } from '../../../shared/ui/toast/toast-containe
 interface NavigationItem {
   readonly label: string;
   readonly route: string;
+  readonly icon: string;
 }
 
 @Component({
@@ -17,10 +18,10 @@ interface NavigationItem {
 })
 export class ShellComponent {
   readonly navigationItems: NavigationItem[] = [
-    { label: 'Dashboard', route: '/' },
-    { label: 'AdAccounts', route: '/ad-accounts' },
-    { label: 'Ads', route: '/ads' },
-    { label: 'AdSets', route: '/ad-sets' },
-    { label: 'Insights', route: '/insights' },
+    { label: 'Dashboard', route: '/', icon: '🏠' },
+    { label: 'Ad Accounts', route: '/ad-accounts', icon: '🧾' },
+    { label: 'Ads', route: '/ads', icon: '📣' },
+    { label: 'Ad Sets', route: '/ad-sets', icon: '🎯' },
+    { label: 'Insights', route: '/insights', icon: '📊' },
   ];
 }
