@@ -42,7 +42,12 @@ export class AdsService {
     return this.baseApiService.put<Ad, Record<string, never>>(`${this.endpoint}/${id}/activate`, {});
   }
 
-  getAdInsights(id: string): Observable<InsightsResponse> {
-    return this.baseApiService.get<InsightsResponse>(`${this.endpoint}/${id}/insights`);
+  getAdInsights(id: string, startDate?: string, endDate?: string): Observable<InsightsResponse> {
+    return this.baseApiService.get<InsightsResponse>(`${this.endpoint}/${id}/insights`, {
+      params: {
+        startDate,
+        endDate,
+      },
+    });
   }
 }

@@ -1,0 +1,94 @@
+<section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+  <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+    <div>
+      <h3 class="text-lg font-semibold text-slate-900">Dashboard de insights</h3>
+      <p class="text-sm text-slate-500">Métricas del anuncio por rango de fechas.</p>
+    </div>
+
+    <div class="grid gap-2 sm:grid-cols-3">
+      <label class="text-xs font-medium text-slate-600">
+        Desde
+        <input
+          type="date"
+          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+          [(ngModel)]="startDate"
+        />
+      </label>
+
+      <label class="text-xs font-medium text-slate-600">
+        Hasta
+        <input
+          type="date"
+          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+          [(ngModel)]="endDate"
+          [max]="today"
+        />
+      </label>
+
+      <button
+        type="button"
+        class="self-end rounded-lg border border-blue-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+        [disabled]="isLoading"
+        (click)="onApplyDateRange()"
+      >
+        {{ isLoading ? 'Cargando...' : 'Aplicar' }}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage" class="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+    {{ errorMessage }}
+  </div>
+
+  <div class="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <article class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <p class="text-xs uppercase tracking-wide text-slate-500">Impresiones</p>
+      <p class="text-xl font-semibold text-slate-900">{{ totalImpressions | number }}</p>
+    </article>
+
+    <article class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <p class="text-xs uppercase tracking-wide text-slate-500">Clicks</p>
+      <p class="text-xl font-semibold text-slate-900">{{ totalClicks | number }}</p>
+    </article>
+
+    <article class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <p class="text-xs uppercase tracking-wide text-slate-500">Conversions</p>
+      <p class="text-xl font-semibold text-slate-900">{{ totalConversions | number }}</p>
+    </article>
+
+    <article class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <p class="text-xs uppercase tracking-wide text-slate-500">Spend</p>
+      <p class="text-xl font-semibold text-slate-900">{{ totalSpend | currency: 'USD' : 'symbol' : '1.2-2' }}</p>
+    </article>
+  </div>
+
+  <div class="grid gap-4 lg:grid-cols-2">
+    <article class="rounded-lg border border-slate-200 p-3">
+      <h4 class="mb-2 text-sm font-semibold text-slate-700">Impresiones</h4>
+      <div class="h-64">
+        <canvas #impressionsCanvas></canvas>
+      </div>
+    </article>
+
+    <article class="rounded-lg border border-slate-200 p-3">
+      <h4 class="mb-2 text-sm font-semibold text-slate-700">Clicks</h4>
+      <div class="h-64">
+        <canvas #clicksCanvas></canvas>
+      </div>
+    </article>
+
+    <article class="rounded-lg border border-slate-200 p-3">
+      <h4 class="mb-2 text-sm font-semibold text-slate-700">Conversions</h4>
+      <div class="h-64">
+        <canvas #conversionsCanvas></canvas>
+      </div>
+    </article>
+
+    <article class="rounded-lg border border-slate-200 p-3">
+      <h4 class="mb-2 text-sm font-semibold text-slate-700">Spend</h4>
+      <div class="h-64">
+        <canvas #spendCanvas></canvas>
+      </div>
+    </article>
+  </div>
+</section>
