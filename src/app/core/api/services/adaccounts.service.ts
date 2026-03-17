@@ -2,8 +2,10 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import {
+  Ad,
   AdAccount,
   AdAccountsQueryParams,
+  AdSet,
   ImportFromMetaRequest,
   ImportFromMetaResponse,
   PaginationResponse,
@@ -30,6 +32,18 @@ export class AdAccountsService {
         SortDirection: params?.sortDirection,
       },
     });
+  }
+
+  getAdAccountById(id: string): Observable<AdAccount> {
+    return this.baseApiService.get<AdAccount>(`${this.endpoint}/${id}`);
+  }
+
+  getAdAccountAds(id: string): Observable<PaginationResponse<Ad>> {
+    return this.baseApiService.get<PaginationResponse<Ad>>(`${this.endpoint}/${id}/ads`);
+  }
+
+  getAdAccountAdSets(id: string): Observable<PaginationResponse<AdSet>> {
+    return this.baseApiService.get<PaginationResponse<AdSet>>(`${this.endpoint}/${id}/adsets`);
   }
 
   importFromMeta(payload: ImportFromMetaRequest = {}): Observable<ImportFromMetaResponse> {
