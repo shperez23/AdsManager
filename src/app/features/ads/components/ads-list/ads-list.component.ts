@@ -6,13 +6,24 @@ import { Subject, debounceTime, finalize, takeUntil } from 'rxjs';
 import { AdInsightsDashboardComponent } from '../ad-insights-dashboard/ad-insights-dashboard.component';
 import { Ad, PaginationResponse } from '../../../../core/api/models';
 import { AdsService } from '../../../../core/api/services/ads.service';
+import { EmptyStateComponent } from '../../../../shared/ui/states/empty-state.component';
+import { ErrorStateComponent } from '../../../../shared/ui/states/error-state.component';
+import { LoadingStateComponent } from '../../../../shared/ui/states/loading-state.component';
 
 type AdStatusFilter = 'ALL' | 'ACTIVE' | 'PAUSED' | 'DISABLED';
 
 @Component({
   selector: 'app-ads-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, CurrencyPipe, AdInsightsDashboardComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    CurrencyPipe,
+    AdInsightsDashboardComponent,
+    LoadingStateComponent,
+    EmptyStateComponent,
+    ErrorStateComponent,
+  ],
   templateUrl: './ads-list.component.html',
 })
 export class AdsListComponent implements OnInit, OnDestroy {
@@ -112,6 +123,10 @@ export class AdsListComponent implements OnInit, OnDestroy {
 
   formatSpend(ad: Ad): number {
     return ad.budget ?? 0;
+  }
+
+  onRetry(): void {
+    this.loadAds();
   }
 
   private listenToSearch(): void {

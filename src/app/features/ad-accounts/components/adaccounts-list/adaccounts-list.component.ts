@@ -10,13 +10,16 @@ import {
   SortDirection,
 } from '../../../../core/api/models';
 import { AdAccountsService } from '../../../../core/api/services/adaccounts.service';
+import { EmptyStateComponent } from '../../../../shared/ui/states/empty-state.component';
+import { ErrorStateComponent } from '../../../../shared/ui/states/error-state.component';
+import { LoadingStateComponent } from '../../../../shared/ui/states/loading-state.component';
 
 type SortColumn = 'name' | 'status' | 'createdAt';
 
 @Component({
   selector: 'app-adaccounts-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LoadingStateComponent, EmptyStateComponent, ErrorStateComponent],
   templateUrl: './adaccounts-list.component.html',
 })
 export class AdaccountsListComponent implements OnInit, OnDestroy {
@@ -118,6 +121,10 @@ export class AdaccountsListComponent implements OnInit, OnDestroy {
 
   onViewDetail(account: AdAccount): void {
     this.viewDetail.emit(account);
+  }
+
+  onRetry(): void {
+    this.loadAdAccounts();
   }
 
   get pageNumbers(): number[] {

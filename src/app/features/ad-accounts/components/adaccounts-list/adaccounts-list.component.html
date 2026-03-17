@@ -33,9 +33,13 @@
     </div>
   </div>
 
-  <div *ngIf="errorMessage" class="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-    {{ errorMessage }}
-  </div>
+  <app-error-state
+    *ngIf="errorMessage"
+    class="mb-4 block"
+    [message]="errorMessage"
+    [showRetry]="true"
+    (retry)="onRetry()"
+  ></app-error-state>
 
   <div class="overflow-x-auto rounded-lg border border-slate-200">
     <table class="min-w-full divide-y divide-slate-200 text-sm">
@@ -65,11 +69,15 @@
 
       <tbody class="divide-y divide-slate-200 bg-white">
         <tr *ngIf="isLoading">
-          <td colspan="4" class="px-4 py-6 text-center text-slate-500">Cargando ad accounts...</td>
+          <td colspan="4" class="px-4 py-2">
+            <app-loading-state message="Cargando ad accounts..."></app-loading-state>
+          </td>
         </tr>
 
         <tr *ngIf="!isLoading && adAccounts.length === 0">
-          <td colspan="4" class="px-4 py-6 text-center text-slate-500">No se encontraron resultados.</td>
+          <td colspan="4" class="px-4 py-2">
+            <app-empty-state></app-empty-state>
+          </td>
         </tr>
 
         <tr *ngFor="let adAccount of adAccounts; trackBy: trackByAdAccount" class="hover:bg-slate-50">
