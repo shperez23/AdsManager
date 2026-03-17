@@ -1,0 +1,5 @@
+<div class="grid gap-6 xl:grid-cols-[1.4fr,1fr]">
+  <app-adaccounts-list (viewDetail)="onViewDetail($event)"></app-adaccounts-list>
+
+  <app-adaccount-detail [adAccountId]="selectedAdAccount?.id ?? null"></app-adaccount-detail>
+</div>

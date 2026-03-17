@@ -55,6 +55,19 @@ export class BaseApiService {
       .pipe(catchError((error: unknown) => this.handleError(error)));
   }
 
+  patch<TResponse, TPayload = unknown>(
+    endpoint: string,
+    payload: TPayload,
+    options?: BaseApiRequestOptions,
+  ): Observable<TResponse> {
+    return this.http
+      .patch<TResponse>(this.buildUrl(endpoint), payload, {
+        headers: options?.headers,
+        params: this.buildParams(options?.params),
+      })
+      .pipe(catchError((error: unknown) => this.handleError(error)));
+  }
+
   delete<T>(endpoint: string, options?: BaseApiRequestOptions): Observable<T> {
     return this.http
       .delete<T>(this.buildUrl(endpoint), {

@@ -1,11 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 
+import { AdsService } from '../../../core/api/services/ads.service';
+import { ToastService } from '../../../core/notifications/toast.service';
+import { Ad, CreateAdRequest, UpdateAdRequest } from '../../../shared/models';
 import { AdsFormComponent, AdsFormSubmitEvent } from '../components/ads-form/ads-form.component';
 import { AdsListComponent } from '../components/ads-list/ads-list.component';
-import { Ad, CreateAdRequest, UpdateAdRequest } from '../../../shared/models';
-import { AdsService } from '../../../core/api/services/ads.service';
 
 @Component({
   selector: 'app-ads-page',
@@ -17,7 +19,12 @@ export class AdsPageComponent {
   selectedAd: Ad | null = null;
   isSubmitting = false;
 
-  constructor(private readonly adsService: AdsService) {}
+  private readonly destroyRef = inject(DestroyRef);
+
+  constructor(
+    private readonly adsService: AdsService,
+    private readonly toastService: ToastService,
+  ) {}
 
   onEditAd(ad: Ad): void {
     this.selectedAd = ad;
@@ -32,10 +39,17 @@ export class AdsPageComponent {
         : this.adsService.createAd(event.value as CreateAdRequest);
 
     request$
-      .pipe(finalize(() => (this.isSubmitting = false)))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => (this.isSubmitting = false)),
+      )
       .subscribe({
         next: () => {
           this.selectedAd = null;
+          this.toastService.success({ title: 'Ads', message: 'Registro guardado correctamente.' });
+        },
+        error: () => {
+          this.toastService.error({ title: 'Ads', message: 'No se pudo guardar el ad.' });
         },
       });
   }
