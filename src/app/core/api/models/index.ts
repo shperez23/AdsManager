@@ -9,3 +9,4 @@ export * from './ad-accounts-actions.model';
 export * from './ad-accounts-query-params.model';
 
 export * from './ads-actions.model';
+export * from './ad-sets-actions.model';
