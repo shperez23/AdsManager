@@ -3,6 +3,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, finalize, takeUntil } from 'rxjs';
 
+import { AdInsightsDashboardComponent } from '../ad-insights-dashboard/ad-insights-dashboard.component';
 import { Ad, PaginationResponse } from '../../../../core/api/models';
 import { AdsService } from '../../../../core/api/services/ads.service';
 
@@ -11,7 +12,7 @@ type AdStatusFilter = 'ALL' | 'ACTIVE' | 'PAUSED' | 'DISABLED';
 @Component({
   selector: 'app-ads-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, CurrencyPipe],
+  imports: [CommonModule, FormsModule, CurrencyPipe, AdInsightsDashboardComponent],
   templateUrl: './ads-list.component.html',
 })
 export class AdsListComponent implements OnInit, OnDestroy {
@@ -29,6 +30,7 @@ export class AdsListComponent implements OnInit, OnDestroy {
   currentPage = 1;
   totalPages = 1;
   totalItems = 0;
+  selectedAdId: string | null = null;
 
   isLoading = false;
   errorMessage: string | null = null;
@@ -71,6 +73,10 @@ export class AdsListComponent implements OnInit, OnDestroy {
 
     this.currentPage = page;
     this.updatePagination();
+  }
+
+  onSelectInsights(adId: string): void {
+    this.selectedAdId = adId;
   }
 
   onToggleStatus(ad: Ad): void {
