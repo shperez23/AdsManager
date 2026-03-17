@@ -10,4 +10,4 @@ export const API_CONFIG: ApiConfig = {
   apiVersion: environment.apiVersion,
 };
 
-export const API_BASE_URL = `${API_CONFIG.apiUrl}/${API_CONFIG.apiVersion}`;
+export const API_BASE_URL = `${API_CONFIG.apiUrl}/api/${API_CONFIG.apiVersion}`;

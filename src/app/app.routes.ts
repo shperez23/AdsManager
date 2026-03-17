@@ -1,5 +1,8 @@
 import { Routes } from '@angular/router';
 
+import { AdAccountsPageComponent } from './features/ad-accounts/pages/ad-accounts-page.component';
+import { AdSetsPageComponent } from './features/ad-sets/pages/ad-sets-page.component';
+import { AdsPageComponent } from './features/ads/pages/ads-page.component';
 import { DashboardPageComponent } from './features/dashboard/pages/dashboard-page.component';
 
 export const appRoutes: Routes = [
@@ -9,18 +12,18 @@ export const appRoutes: Routes = [
   },
   {
     path: 'ad-accounts',
-    component: DashboardPageComponent,
+    component: AdAccountsPageComponent,
   },
   {
     path: 'ads',
-    component: DashboardPageComponent,
+    component: AdsPageComponent,
   },
   {
     path: 'ad-sets',
-    component: DashboardPageComponent,
+    component: AdSetsPageComponent,
   },
   {
     path: 'insights',
-    component: DashboardPageComponent,
+    component: AdsPageComponent,
   },
 ];

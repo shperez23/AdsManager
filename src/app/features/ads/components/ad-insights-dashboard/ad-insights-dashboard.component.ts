@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import { Subject, finalize, takeUntil } from 'rxjs';
 
-import { InsightMetrics } from '../../../../core/api/models';
+import { InsightMetrics } from '../../../../shared/models';
 import { AdsService } from '../../../../core/api/services/ads.service';
 
 Chart.register(...registerables);

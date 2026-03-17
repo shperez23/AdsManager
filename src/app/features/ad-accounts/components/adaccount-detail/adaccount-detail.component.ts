@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
-import { Subject, forkJoin, takeUntil } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 
-import { Ad, AdAccount, AdSet } from '../../../../core/api/models';
+import { Ad, AdAccount, AdSet } from '../../../../shared/models';
 import { AdAccountsService } from '../../../../core/api/services/adaccounts.service';
 
 @Component({
@@ -55,17 +55,14 @@ export class AdaccountDetailComponent implements OnChanges, OnDestroy {
     this.isLoading = true;
     this.errorMessage = null;
 
-    forkJoin({
-      adAccount: this.adAccountsService.getAdAccountById(id),
-      adsResponse: this.adAccountsService.getAdAccountAds(id),
-      adSetsResponse: this.adAccountsService.getAdAccountAdSets(id),
-    })
+    this.adAccountsService
+      .getAdAccounts({ Page: 1, PageSize: 100 })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: ({ adAccount, adsResponse, adSetsResponse }) => {
-          this.adAccount = adAccount;
-          this.ads = adsResponse.items;
-          this.adSets = adSetsResponse.items;
+        next: ({ items }) => {
+          this.adAccount = items.find((item) => item.id === id) ?? null;
+          this.ads = [];
+          this.adSets = [];
           this.isLoading = false;
         },
         error: () => {

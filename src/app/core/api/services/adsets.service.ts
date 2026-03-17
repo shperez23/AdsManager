@@ -5,9 +5,10 @@ import {
   AdSet,
   CreateAdSetRequest,
   InsightsResponse,
-  PaginationResponse,
+  PaginatedResponse,
+  PaginationQueryParams,
   UpdateAdSetRequest,
-} from '../models';
+} from '../../../shared/models';
 import { BaseApiService } from './base-api.service';
 
 @Injectable({
@@ -18,8 +19,8 @@ export class AdSetsService {
 
   constructor(private readonly baseApiService: BaseApiService) {}
 
-  getAdSets(): Observable<PaginationResponse<AdSet>> {
-    return this.baseApiService.get<PaginationResponse<AdSet>>(this.endpoint);
+  getAdSets(params?: PaginationQueryParams): Observable<PaginatedResponse<AdSet>> {
+    return this.baseApiService.get<PaginatedResponse<AdSet>>(this.endpoint, { params });
   }
 
   createAdSet(payload: CreateAdSetRequest): Observable<AdSet> {
@@ -34,20 +35,17 @@ export class AdSetsService {
     return this.baseApiService.get<AdSet>(`${this.endpoint}/${id}`);
   }
 
-  pauseAdSet(id: string): Observable<AdSet> {
-    return this.baseApiService.put<AdSet, Record<string, never>>(`${this.endpoint}/${id}/pause`, {});
+  pauseAdSet(id: string): Observable<void> {
+    return this.baseApiService.put<void, Record<string, never>>(`${this.endpoint}/${id}/pause`, {});
   }
 
-  activateAdSet(id: string): Observable<AdSet> {
-    return this.baseApiService.put<AdSet, Record<string, never>>(`${this.endpoint}/${id}/activate`, {});
+  activateAdSet(id: string): Observable<void> {
+    return this.baseApiService.put<void, Record<string, never>>(`${this.endpoint}/${id}/activate`, {});
   }
 
-  getAdSetInsights(id: string, startDate?: string, endDate?: string): Observable<InsightsResponse> {
+  getAdSetInsights(id: string, dateFrom?: string, dateTo?: string): Observable<InsightsResponse> {
     return this.baseApiService.get<InsightsResponse>(`${this.endpoint}/${id}/insights`, {
-      params: {
-        startDate,
-        endDate,
-      },
+      params: { dateFrom, dateTo },
     });
   }
 }

@@ -1,10 +1,10 @@
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, finalize, takeUntil } from 'rxjs';
 
 import { AdInsightsDashboardComponent } from '../ad-insights-dashboard/ad-insights-dashboard.component';
-import { Ad, PaginationResponse } from '../../../../core/api/models';
+import { Ad, PaginatedResponse, PaginationQueryParams } from '../../../../shared/models';
 import { AdsService } from '../../../../core/api/services/ads.service';
 import { EmptyStateComponent } from '../../../../shared/ui/states/empty-state.component';
 import { ErrorStateComponent } from '../../../../shared/ui/states/error-state.component';
@@ -27,12 +27,12 @@ type AdStatusFilter = 'ALL' | 'ACTIVE' | 'PAUSED' | 'DISABLED';
   templateUrl: './ads-list.component.html',
 })
 export class AdsListComponent implements OnInit, OnDestroy {
+  @Output() editAd = new EventEmitter<Ad>();
+
   readonly pageSizeOptions = [5, 10, 20, 50];
   readonly statusOptions: AdStatusFilter[] = ['ALL', 'ACTIVE', 'PAUSED', 'DISABLED'];
 
   ads: Ad[] = [];
-  filteredAds: Ad[] = [];
-  paginatedAds: Ad[] = [];
 
   searchTerm = '';
   selectedStatus: AdStatusFilter = 'ALL';
@@ -68,13 +68,13 @@ export class AdsListComponent implements OnInit, OnDestroy {
   onStatusChange(status: AdStatusFilter): void {
     this.selectedStatus = status;
     this.currentPage = 1;
-    this.applyFilters();
+    this.loadAds();
   }
 
   onPageSizeChange(pageSize: number): void {
     this.selectedPageSize = Number(pageSize);
     this.currentPage = 1;
-    this.updatePagination();
+    this.loadAds();
   }
 
   onPageChange(page: number): void {
@@ -83,11 +83,15 @@ export class AdsListComponent implements OnInit, OnDestroy {
     }
 
     this.currentPage = page;
-    this.updatePagination();
+    this.loadAds();
   }
 
   onSelectInsights(adId: string): void {
     this.selectedAdId = adId;
+  }
+
+  onEdit(ad: Ad): void {
+    this.editAd.emit(ad);
   }
 
   onToggleStatus(ad: Ad): void {
@@ -117,14 +121,6 @@ export class AdsListComponent implements OnInit, OnDestroy {
     return ad.id;
   }
 
-  formatCampaign(ad: Ad): string {
-    return ad.adSetId || '—';
-  }
-
-  formatSpend(ad: Ad): number {
-    return ad.budget ?? 0;
-  }
-
   onRetry(): void {
     this.loadAds();
   }
@@ -135,7 +131,7 @@ export class AdsListComponent implements OnInit, OnDestroy {
       .subscribe((term) => {
         this.searchTerm = term;
         this.currentPage = 1;
-        this.applyFilters();
+        this.loadAds();
       });
   }
 
@@ -143,8 +139,15 @@ export class AdsListComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.errorMessage = null;
 
+    const params: PaginationQueryParams = {
+      Page: this.currentPage,
+      PageSize: this.selectedPageSize,
+      Search: this.searchTerm || undefined,
+      Status: this.selectedStatus !== 'ALL' ? this.selectedStatus : undefined,
+    };
+
     this.adsService
-      .getAds()
+      .getAds(params)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {
@@ -152,48 +155,18 @@ export class AdsListComponent implements OnInit, OnDestroy {
         }),
       )
       .subscribe({
-        next: (response: PaginationResponse<Ad>) => {
+        next: (response: PaginatedResponse<Ad>) => {
           this.ads = response.items;
-          this.applyFilters();
+          this.totalItems = response.totalItems;
+          this.totalPages = Math.max(response.totalPages, 1);
+          this.currentPage = response.page;
         },
         error: () => {
           this.errorMessage = 'No se pudieron cargar los anuncios.';
           this.ads = [];
-          this.filteredAds = [];
-          this.paginatedAds = [];
           this.totalItems = 0;
           this.totalPages = 1;
         },
       });
-  }
-
-  private applyFilters(): void {
-    const normalizedTerm = this.searchTerm.trim().toLowerCase();
-
-    this.filteredAds = this.ads.filter((ad) => {
-      const matchesStatus = this.selectedStatus === 'ALL' || ad.status === this.selectedStatus;
-      const matchesSearch =
-        normalizedTerm.length === 0 ||
-        ad.name.toLowerCase().includes(normalizedTerm) ||
-        this.formatCampaign(ad).toLowerCase().includes(normalizedTerm);
-
-      return matchesStatus && matchesSearch;
-    });
-
-    this.totalItems = this.filteredAds.length;
-    this.totalPages = Math.max(Math.ceil(this.totalItems / this.selectedPageSize), 1);
-
-    if (this.currentPage > this.totalPages) {
-      this.currentPage = this.totalPages;
-    }
-
-    this.updatePagination();
-  }
-
-  private updatePagination(): void {
-    const start = (this.currentPage - 1) * this.selectedPageSize;
-    const end = start + this.selectedPageSize;
-    this.paginatedAds = this.filteredAds.slice(start, end);
-    this.totalPages = Math.max(Math.ceil(this.totalItems / this.selectedPageSize), 1);
   }
 }

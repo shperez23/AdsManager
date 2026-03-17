@@ -60,13 +60,13 @@
           </td>
         </tr>
 
-        <tr *ngIf="!isLoading && paginatedAds.length === 0">
+        <tr *ngIf="!isLoading && ads.length === 0">
           <td colspan="5" class="px-4 py-2">
             <app-empty-state></app-empty-state>
           </td>
         </tr>
 
-        <tr *ngFor="let ad of paginatedAds; trackBy: trackByAd" class="hover:bg-slate-50">
+        <tr *ngFor="let ad of ads; trackBy: trackByAd" class="hover:bg-slate-50">
           <td class="px-4 py-3 text-slate-900">
             <span class="font-medium">{{ ad.name }}</span>
           </td>
@@ -82,8 +82,8 @@
               {{ ad.status }}
             </span>
           </td>
-          <td class="px-4 py-3 text-slate-700">{{ formatCampaign(ad) }}</td>
-          <td class="px-4 py-3 text-slate-700">{{ formatSpend(ad) | currency: 'USD' : 'symbol' : '1.0-0' }}</td>
+          <td class="px-4 py-3 text-slate-700">{{ ad.adSetId || "—" }}</td>
+          <td class="px-4 py-3 text-slate-700">—</td>
           <td class="px-4 py-3">
             <div class="flex items-center gap-2">
               <button
@@ -93,6 +93,14 @@
                 (click)="onToggleStatus(ad)"
               >
                 {{ ad.status === 'ACTIVE' ? 'Pausar' : 'Activar' }}
+              </button>
+
+              <button
+                type="button"
+                class="rounded-md border border-indigo-300 px-3 py-1.5 text-xs font-medium text-indigo-700 transition hover:bg-indigo-50"
+                (click)="onEdit(ad)"
+              >
+                Editar
               </button>
 
               <button
