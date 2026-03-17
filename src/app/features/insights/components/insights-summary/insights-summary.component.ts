@@ -5,6 +5,7 @@ import { finalize } from 'rxjs';
 
 import { ReportsService } from '../../../../core/api/services/reports.service';
 import { InsightMetrics } from '../../../../shared/models';
+import { createDefaultDateRange } from '../../../../shared/utils/insights.util';
 
 @Component({
   selector: 'app-insights-summary',
@@ -13,8 +14,10 @@ import { InsightMetrics } from '../../../../shared/models';
   templateUrl: './insights-summary.component.html',
 })
 export class InsightsSummaryComponent implements OnInit {
-  startDate = this.toDateInput(this.addDays(new Date(), -7));
-  endDate = this.toDateInput(new Date());
+  readonly today = createDefaultDateRange(0).dateTo;
+
+  startDate = createDefaultDateRange(7).dateFrom;
+  endDate = createDefaultDateRange(7).dateTo;
 
   rows: InsightMetrics[] = [];
   isLoading = false;
@@ -57,13 +60,4 @@ export class InsightsSummaryComponent implements OnInit {
       });
   }
 
-  private toDateInput(date: Date): string {
-    return date.toISOString().slice(0, 10);
-  }
-
-  private addDays(date: Date, days: number): Date {
-    const nextDate = new Date(date);
-    nextDate.setDate(nextDate.getDate() + days);
-    return nextDate;
-  }
 }
