@@ -2,27 +2,21 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { Ad } from '../../../../core/api/models';
+import { Ad, CreateAdRequest, UpdateAdRequest } from '../../../../shared/models';
 
 type AdStatus = 'ACTIVE' | 'PAUSED' | 'DISABLED';
 
-export interface AdsFormValue {
-  nombre: string;
-  campaignId: string;
-  status: AdStatus;
-  presupuesto: number;
-}
-
 export interface AdsFormSubmitEvent {
   mode: 'create' | 'edit';
-  value: AdsFormValue;
+  value: CreateAdRequest | UpdateAdRequest;
 }
 
 type AdsFormGroup = FormGroup<{
-  nombre: FormControl<string>;
-  campaignId: FormControl<string>;
+  adSetId: FormControl<string>;
+  name: FormControl<string>;
   status: FormControl<AdStatus>;
-  presupuesto: FormControl<number>;
+  creativeJson: FormControl<string>;
+  previewUrl: FormControl<string>;
 }>;
 
 @Component({
@@ -36,27 +30,24 @@ export class AdsFormComponent implements OnChanges {
   @Input() isSubmitting = false;
 
   @Output() submitForm = new EventEmitter<AdsFormSubmitEvent>();
-  @Output() cancelForm = new EventEmitter<void>();
 
   readonly statusOptions: AdStatus[] = ['ACTIVE', 'PAUSED', 'DISABLED'];
 
   readonly adsForm: AdsFormGroup = new FormGroup({
-    nombre: new FormControl('', {
+    adSetId: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    name: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.maxLength(120)],
-    }),
-    campaignId: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.maxLength(64)],
     }),
     status: new FormControl<AdStatus>('ACTIVE', {
       nonNullable: true,
       validators: [Validators.required],
     }),
-    presupuesto: new FormControl(0, {
-      nonNullable: true,
-      validators: [Validators.required, Validators.min(1)],
-    }),
+    creativeJson: new FormControl('', { nonNullable: true }),
+    previewUrl: new FormControl('', { nonNullable: true }),
   });
 
   get isEditMode(): boolean {
@@ -70,19 +61,21 @@ export class AdsFormComponent implements OnChanges {
 
     if (!this.ad) {
       this.adsForm.reset({
-        nombre: '',
-        campaignId: '',
+        adSetId: '',
+        name: '',
         status: 'ACTIVE',
-        presupuesto: 0,
+        creativeJson: '',
+        previewUrl: '',
       });
       return;
     }
 
     this.adsForm.reset({
-      nombre: this.ad.name ?? '',
-      campaignId: this.ad.adSetId ?? '',
+      adSetId: this.ad.adSetId ?? '',
+      name: this.ad.name ?? '',
       status: this.toAdStatus(this.ad.status),
-      presupuesto: this.ad.budget ?? 0,
+      creativeJson: this.ad.creativeJson ?? '',
+      previewUrl: this.ad.previewUrl ?? '',
     });
   }
 
@@ -92,14 +85,25 @@ export class AdsFormComponent implements OnChanges {
       return;
     }
 
+    const value = this.adsForm.getRawValue();
+
     this.submitForm.emit({
       mode: this.isEditMode ? 'edit' : 'create',
-      value: this.adsForm.getRawValue(),
+      value: this.isEditMode
+        ? {
+            name: value.name,
+            status: value.status,
+            creativeJson: value.creativeJson || undefined,
+            previewUrl: value.previewUrl || undefined,
+          }
+        : {
+            adSetId: value.adSetId,
+            name: value.name,
+            status: value.status,
+            creativeJson: value.creativeJson || undefined,
+            previewUrl: value.previewUrl || undefined,
+          },
     });
-  }
-
-  onCancel(): void {
-    this.cancelForm.emit();
   }
 
   private toAdStatus(status: string | undefined): AdStatus {

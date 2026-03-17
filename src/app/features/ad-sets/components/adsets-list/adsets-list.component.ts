@@ -1,26 +1,29 @@
-import { CommonModule, CurrencyPipe } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, finalize, takeUntil } from 'rxjs';
 
-import { AdSet, PaginationResponse } from '../../../../core/api/models';
+import { AdSet, PaginatedResponse, PaginationQueryParams } from '../../../../shared/models';
 import { AdSetsService } from '../../../../core/api/services/adsets.service';
+import { EmptyStateComponent } from '../../../../shared/ui/states/empty-state.component';
+import { ErrorStateComponent } from '../../../../shared/ui/states/error-state.component';
+import { LoadingStateComponent } from '../../../../shared/ui/states/loading-state.component';
 
 type AdSetStatusFilter = 'ALL' | 'ACTIVE' | 'PAUSED' | 'DISABLED';
 
 @Component({
   selector: 'app-adsets-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, CurrencyPipe],
+  imports: [CommonModule, FormsModule, LoadingStateComponent, EmptyStateComponent, ErrorStateComponent],
   templateUrl: './adsets-list.component.html',
 })
 export class AdsetsListComponent implements OnInit, OnDestroy {
+  @Output() editAdSet = new EventEmitter<AdSet>();
+
   readonly pageSizeOptions = [5, 10, 20, 50];
   readonly statusOptions: AdSetStatusFilter[] = ['ALL', 'ACTIVE', 'PAUSED', 'DISABLED'];
 
   adSets: AdSet[] = [];
-  filteredAdSets: AdSet[] = [];
-  paginatedAdSets: AdSet[] = [];
 
   searchTerm = '';
   selectedStatus: AdSetStatusFilter = 'ALL';
@@ -56,13 +59,13 @@ export class AdsetsListComponent implements OnInit, OnDestroy {
   onStatusChange(status: AdSetStatusFilter): void {
     this.selectedStatus = status;
     this.currentPage = 1;
-    this.applyFilters();
+    this.loadAdSets();
   }
 
   onPageSizeChange(pageSize: number): void {
     this.selectedPageSize = Number(pageSize);
     this.currentPage = 1;
-    this.updatePagination();
+    this.loadAdSets();
   }
 
   onPageChange(page: number): void {
@@ -71,7 +74,11 @@ export class AdsetsListComponent implements OnInit, OnDestroy {
     }
 
     this.currentPage = page;
-    this.updatePagination();
+    this.loadAdSets();
+  }
+
+  onEdit(adSet: AdSet): void {
+    this.editAdSet.emit(adSet);
   }
 
   onToggleStatus(adSet: AdSet): void {
@@ -97,6 +104,10 @@ export class AdsetsListComponent implements OnInit, OnDestroy {
       });
   }
 
+  onRetry(): void {
+    this.loadAdSets();
+  }
+
   get pageNumbers(): number[] {
     return Array.from({ length: this.totalPages }, (_, index) => index + 1);
   }
@@ -105,17 +116,13 @@ export class AdsetsListComponent implements OnInit, OnDestroy {
     return adSet.id;
   }
 
-  formatBudget(adSet: AdSet): number {
-    return adSet.dailyBudget ?? adSet.lifetimeBudget ?? 0;
-  }
-
   private listenToSearch(): void {
     this.searchChange$
       .pipe(debounceTime(300), takeUntil(this.destroy$))
       .subscribe((term) => {
         this.searchTerm = term;
         this.currentPage = 1;
-        this.applyFilters();
+        this.loadAdSets();
       });
   }
 
@@ -123,8 +130,15 @@ export class AdsetsListComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.errorMessage = null;
 
+    const params: PaginationQueryParams = {
+      Page: this.currentPage,
+      PageSize: this.selectedPageSize,
+      Search: this.searchTerm || undefined,
+      Status: this.selectedStatus !== 'ALL' ? this.selectedStatus : undefined,
+    };
+
     this.adSetsService
-      .getAdSets()
+      .getAdSets(params)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {
@@ -132,48 +146,18 @@ export class AdsetsListComponent implements OnInit, OnDestroy {
         }),
       )
       .subscribe({
-        next: (response: PaginationResponse<AdSet>) => {
+        next: (response: PaginatedResponse<AdSet>) => {
           this.adSets = response.items;
-          this.applyFilters();
+          this.totalItems = response.totalItems;
+          this.totalPages = Math.max(response.totalPages, 1);
+          this.currentPage = response.page;
         },
         error: () => {
           this.errorMessage = 'No se pudieron cargar los ad sets.';
           this.adSets = [];
-          this.filteredAdSets = [];
-          this.paginatedAdSets = [];
           this.totalItems = 0;
           this.totalPages = 1;
         },
       });
-  }
-
-  private applyFilters(): void {
-    const normalizedTerm = this.searchTerm.trim().toLowerCase();
-
-    this.filteredAdSets = this.adSets.filter((adSet) => {
-      const matchesStatus = this.selectedStatus === 'ALL' || adSet.status === this.selectedStatus;
-      const matchesSearch =
-        normalizedTerm.length === 0 ||
-        adSet.name.toLowerCase().includes(normalizedTerm) ||
-        adSet.accountId.toLowerCase().includes(normalizedTerm);
-
-      return matchesStatus && matchesSearch;
-    });
-
-    this.totalItems = this.filteredAdSets.length;
-    this.totalPages = Math.max(Math.ceil(this.totalItems / this.selectedPageSize), 1);
-
-    if (this.currentPage > this.totalPages) {
-      this.currentPage = this.totalPages;
-    }
-
-    this.updatePagination();
-  }
-
-  private updatePagination(): void {
-    const start = (this.currentPage - 1) * this.selectedPageSize;
-    const end = start + this.selectedPageSize;
-    this.paginatedAdSets = this.filteredAdSets.slice(start, end);
-    this.totalPages = Math.max(Math.ceil(this.totalItems / this.selectedPageSize), 1);
   }
 }

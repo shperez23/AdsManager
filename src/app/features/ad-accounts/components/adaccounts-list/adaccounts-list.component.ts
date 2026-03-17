@@ -5,10 +5,8 @@ import { Subject, takeUntil, debounceTime, finalize } from 'rxjs';
 
 import {
   AdAccount,
-  AdAccountsQueryParams,
-  PaginationResponse,
-  SortDirection,
-} from '../../../../core/api/models';
+  PaginatedResponse, PaginationQueryParams, SortDirection,
+} from '../../../../shared/models';
 import { AdAccountsService } from '../../../../core/api/services/adaccounts.service';
 import { EmptyStateComponent } from '../../../../shared/ui/states/empty-state.component';
 import { ErrorStateComponent } from '../../../../shared/ui/states/error-state.component';
@@ -39,7 +37,7 @@ export class AdaccountsListComponent implements OnInit, OnDestroy {
   totalItems = 0;
 
   sortBy: SortColumn = 'createdAt';
-  currentSortDirection: SortDirection = SortDirection.DESC;
+  currentSortDirection: SortDirection = SortDirection.Desc;
 
   isLoading = false;
   syncingAccountId: string | null = null;
@@ -90,10 +88,10 @@ export class AdaccountsListComponent implements OnInit, OnDestroy {
   onSort(column: SortColumn): void {
     if (this.sortBy === column) {
       this.currentSortDirection =
-        this.currentSortDirection === SortDirection.ASC ? SortDirection.DESC : SortDirection.ASC;
+        this.currentSortDirection === SortDirection.Asc ? SortDirection.Desc : SortDirection.Asc;
     } else {
       this.sortBy = column;
-      this.currentSortDirection = SortDirection.ASC;
+      this.currentSortDirection = SortDirection.Asc;
     }
 
     this.currentPage = 1;
@@ -140,7 +138,7 @@ export class AdaccountsListComponent implements OnInit, OnDestroy {
       return '↕';
     }
 
-    return this.currentSortDirection === SortDirection.ASC ? '↑' : '↓';
+    return this.currentSortDirection === SortDirection.Asc ? '↑' : '↓';
   }
 
   private listenToSearch(): void {
@@ -157,13 +155,13 @@ export class AdaccountsListComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.errorMessage = null;
 
-    const params: AdAccountsQueryParams = {
-      page: this.currentPage,
-      pageSize: this.selectedPageSize,
-      search: this.searchTerm || undefined,
-      status: this.selectedStatus !== 'ALL' ? this.selectedStatus : undefined,
-      sortBy: this.sortBy,
-      sortDirection: this.currentSortDirection,
+    const params: PaginationQueryParams = {
+      Page: this.currentPage,
+      PageSize: this.selectedPageSize,
+      Search: this.searchTerm || undefined,
+      Status: this.selectedStatus !== 'ALL' ? this.selectedStatus : undefined,
+      SortBy: this.sortBy,
+      SortDirection: this.currentSortDirection,
     };
 
     this.adAccountsService
@@ -175,7 +173,7 @@ export class AdaccountsListComponent implements OnInit, OnDestroy {
         }),
       )
       .subscribe({
-        next: (response: PaginationResponse<AdAccount>) => {
+        next: (response: PaginatedResponse<AdAccount>) => {
           this.adAccounts = response.items;
           this.currentPage = response.page;
           this.totalPages = Math.max(response.totalPages, 1);
