@@ -1,0 +1,108 @@
+<section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+  <div class="mb-5 flex items-center justify-between">
+    <h2 class="text-lg font-semibold text-slate-900">
+      {{ isEditMode ? 'Editar ad' : 'Crear ad' }}
+    </h2>
+    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+      {{ isEditMode ? 'Modo edición' : 'Modo creación' }}
+    </span>
+  </div>
+
+  <form [formGroup]="adsForm" (ngSubmit)="onSubmit()" class="grid gap-4 sm:grid-cols-2">
+    <div class="sm:col-span-2">
+      <label for="nombre" class="mb-1 block text-sm font-medium text-slate-700">Nombre</label>
+      <input
+        id="nombre"
+        type="text"
+        formControlName="nombre"
+        class="w-full rounded-lg border px-3 py-2 text-sm outline-none transition"
+        [ngClass]="
+          adsForm.controls.nombre.touched && adsForm.controls.nombre.invalid
+            ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-100'
+            : 'border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
+        "
+        placeholder="Nombre del anuncio"
+      />
+      <p *ngIf="adsForm.controls.nombre.touched && adsForm.controls.nombre.hasError('required')" class="mt-1 text-xs text-red-600">
+        El nombre es obligatorio.
+      </p>
+      <p *ngIf="adsForm.controls.nombre.touched && adsForm.controls.nombre.hasError('maxlength')" class="mt-1 text-xs text-red-600">
+        El nombre no puede superar 120 caracteres.
+      </p>
+    </div>
+
+    <div>
+      <label for="campaignId" class="mb-1 block text-sm font-medium text-slate-700">Campaign ID</label>
+      <input
+        id="campaignId"
+        type="text"
+        formControlName="campaignId"
+        class="w-full rounded-lg border px-3 py-2 text-sm outline-none transition"
+        [ngClass]="
+          adsForm.controls.campaignId.touched && adsForm.controls.campaignId.invalid
+            ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-100'
+            : 'border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
+        "
+        placeholder="Identificador de campaign"
+      />
+      <p
+        *ngIf="adsForm.controls.campaignId.touched && adsForm.controls.campaignId.hasError('required')"
+        class="mt-1 text-xs text-red-600"
+      >
+        El campaignId es obligatorio.
+      </p>
+    </div>
+
+    <div>
+      <label for="status" class="mb-1 block text-sm font-medium text-slate-700">Status</label>
+      <select
+        id="status"
+        formControlName="status"
+        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+      >
+        <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
+      </select>
+    </div>
+
+    <div class="sm:col-span-2">
+      <label for="presupuesto" class="mb-1 block text-sm font-medium text-slate-700">Presupuesto</label>
+      <input
+        id="presupuesto"
+        type="number"
+        min="1"
+        formControlName="presupuesto"
+        class="w-full rounded-lg border px-3 py-2 text-sm outline-none transition"
+        [ngClass]="
+          adsForm.controls.presupuesto.touched && adsForm.controls.presupuesto.invalid
+            ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-100'
+            : 'border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
+        "
+        placeholder="Ingresa el presupuesto"
+      />
+      <p *ngIf="adsForm.controls.presupuesto.touched && adsForm.controls.presupuesto.hasError('required')" class="mt-1 text-xs text-red-600">
+        El presupuesto es obligatorio.
+      </p>
+      <p *ngIf="adsForm.controls.presupuesto.touched && adsForm.controls.presupuesto.hasError('min')" class="mt-1 text-xs text-red-600">
+        El presupuesto debe ser mayor o igual a 1.
+      </p>
+    </div>
+
+    <div class="sm:col-span-2 flex justify-end gap-2 pt-2">
+      <button
+        type="button"
+        class="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+        [disabled]="isSubmitting"
+        (click)="onCancel()"
+      >
+        Cancelar
+      </button>
+      <button
+        type="submit"
+        class="rounded-md border border-blue-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+        [disabled]="isSubmitting"
+      >
+        {{ isSubmitting ? 'Guardando...' : isEditMode ? 'Actualizar' : 'Crear' }}
+      </button>
+    </div>
+  </form>
+</section>
