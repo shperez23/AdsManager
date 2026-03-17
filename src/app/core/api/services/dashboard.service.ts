@@ -4,11 +4,18 @@ import { Observable } from 'rxjs';
 import { DashboardSummary } from '../../../shared/models';
 import { BaseApiService } from './base-api.service';
 
+export interface DashboardQueryParams {
+  dateFrom?: string;
+  dateTo?: string;
+  campaignId?: string;
+  adAccountId?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
   constructor(private readonly baseApiService: BaseApiService) {}
 
-  getDashboard(dateFrom?: string, dateTo?: string): Observable<DashboardSummary> {
-    return this.baseApiService.get<DashboardSummary>('dashboard', { params: { dateFrom, dateTo } });
+  getDashboard(params?: DashboardQueryParams): Observable<DashboardSummary> {
+    return this.baseApiService.get<DashboardSummary>('dashboard', { params });
   }
 }
