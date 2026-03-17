@@ -4,7 +4,6 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 interface NavigationItem {
   readonly label: string;
-  readonly description: string;
   readonly route: string;
 }
 
@@ -16,9 +15,10 @@ interface NavigationItem {
 })
 export class ShellComponent {
   readonly navigationItems: NavigationItem[] = [
-    { label: 'Dashboard', description: 'Overview', route: '/' },
-    { label: 'Ad Accounts', description: 'Control center', route: '/ad-accounts' },
-    { label: 'Ads', description: 'Creatives & status', route: '/ads' },
-    { label: 'Ad Sets', description: 'Targeting layers', route: '/ad-sets' },
+    { label: 'Dashboard', route: '/' },
+    { label: 'AdAccounts', route: '/ad-accounts' },
+    { label: 'Ads', route: '/ads' },
+    { label: 'AdSets', route: '/ad-sets' },
+    { label: 'Insights', route: '/insights' },
   ];
 }
