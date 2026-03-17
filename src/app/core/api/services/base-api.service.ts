@@ -9,7 +9,7 @@ export type QueryParamValue = string | number | boolean | ReadonlyArray<string |
 
 export interface BaseApiRequestOptions {
   headers?: HttpHeaders | Record<string, string | string[]>;
-  params?: Record<string, QueryParamValue | null | undefined>;
+  params?: object;
 }
 
 @Injectable({
@@ -76,19 +76,23 @@ export class BaseApiService {
 
     let httpParams = new HttpParams();
 
-    Object.entries(params).forEach(([key, value]) => {
+    Object.entries(params as Record<string, unknown>).forEach(([key, value]) => {
       if (value === null || value === undefined) {
         return;
       }
 
       if (Array.isArray(value)) {
         value.forEach((item) => {
-          httpParams = httpParams.append(key, String(item));
+          if (typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean') {
+            httpParams = httpParams.append(key, String(item));
+          }
         });
         return;
       }
 
-      httpParams = httpParams.set(key, String(value));
+      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+        httpParams = httpParams.set(key, String(value));
+      }
     });
 
     return httpParams;

@@ -1,4 +1,4 @@
-import { CommonModule, CurrencyPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, finalize, takeUntil } from 'rxjs';
@@ -18,7 +18,6 @@ type AdStatusFilter = 'ALL' | 'ACTIVE' | 'PAUSED' | 'DISABLED';
   imports: [
     CommonModule,
     FormsModule,
-    CurrencyPipe,
     AdInsightsDashboardComponent,
     LoadingStateComponent,
     EmptyStateComponent,
