@@ -1,13 +1,10 @@
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { AfterViewInit, Component, Input, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, OnDestroy, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import { Subject, finalize, takeUntil } from 'rxjs';
 
-import { InsightMetrics } from '../../../../shared/models';
 import { AdsService } from '../../../../core/api/services/ads.service';
-
-Chart.register(...registerables);
+import { InsightMetrics } from '../../../../shared/models';
 
 @Component({
   selector: 'app-ad-insights-dashboard',
@@ -32,7 +29,7 @@ export class AdInsightsDashboardComponent implements AfterViewInit, OnDestroy {
   isLoading = false;
   errorMessage: string | null = null;
 
-  private chartInstances: Chart[] = [];
+  private renderedCanvases: HTMLCanvasElement[] = [];
   private chartsReady = false;
   private readonly destroy$ = new Subject<void>();
 
@@ -116,80 +113,113 @@ export class AdInsightsDashboardComponent implements AfterViewInit, OnDestroy {
     const labels = this.rows.map((row) => row.dateStart);
 
     this.createChart(this.impressionsCanvas, {
-      label: 'Impresiones',
       labels,
       data: this.rows.map((row) => row.impressions),
-      borderColor: '#2563eb',
-      backgroundColor: 'rgba(37, 99, 235, 0.2)',
+      strokeColor: '#2563eb',
+      fillColor: 'rgba(37, 99, 235, 0.2)',
     });
 
     this.createChart(this.clicksCanvas, {
-      label: 'Clicks',
       labels,
       data: this.rows.map((row) => row.clicks),
-      borderColor: '#0d9488',
-      backgroundColor: 'rgba(13, 148, 136, 0.2)',
+      strokeColor: '#0d9488',
+      fillColor: 'rgba(13, 148, 136, 0.2)',
     });
 
     this.createChart(this.conversionsCanvas, {
-      label: 'Conversions',
       labels,
       data: this.rows.map((row) => row.conversions ?? 0),
-      borderColor: '#7c3aed',
-      backgroundColor: 'rgba(124, 58, 237, 0.2)',
+      strokeColor: '#7c3aed',
+      fillColor: 'rgba(124, 58, 237, 0.2)',
     });
 
     this.createChart(this.spendCanvas, {
-      label: 'Spend',
       labels,
       data: this.rows.map((row) => row.spend),
-      borderColor: '#ea580c',
-      backgroundColor: 'rgba(234, 88, 12, 0.2)',
+      strokeColor: '#ea580c',
+      fillColor: 'rgba(234, 88, 12, 0.2)',
     });
   }
 
   private createChart(
     canvas: ElementRef<HTMLCanvasElement> | undefined,
     config: {
-      label: string;
       labels: string[];
       data: number[];
-      borderColor: string;
-      backgroundColor: string;
+      strokeColor: string;
+      fillColor: string;
     },
   ): void {
     if (!canvas) {
       return;
     }
 
-    const chartConfiguration: ChartConfiguration<'line'> = {
-      type: 'line',
-      data: {
-        labels: config.labels,
-        datasets: [
-          {
-            label: config.label,
-            data: config.data,
-            borderColor: config.borderColor,
-            backgroundColor: config.backgroundColor,
-            tension: 0.3,
-            fill: true,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-      },
-    };
+    const nativeCanvas = canvas.nativeElement;
+    const context = nativeCanvas.getContext('2d');
+    if (!context) {
+      return;
+    }
 
-    const chart = new Chart(canvas.nativeElement, chartConfiguration);
-    this.chartInstances.push(chart);
+    const width = nativeCanvas.clientWidth || 600;
+    const height = nativeCanvas.clientHeight || 256;
+    nativeCanvas.width = width;
+    nativeCanvas.height = height;
+
+    context.clearRect(0, 0, width, height);
+
+    if (config.data.length === 0) {
+      return;
+    }
+
+    const minValue = Math.min(...config.data);
+    const maxValue = Math.max(...config.data);
+    const range = maxValue - minValue || 1;
+    const horizontalPadding = 24;
+    const verticalPadding = 20;
+    const drawWidth = width - horizontalPadding * 2;
+    const drawHeight = height - verticalPadding * 2;
+
+    const points = config.data.map((value, index) => {
+      const x =
+        horizontalPadding +
+        (drawWidth * index) / Math.max(config.data.length - 1, 1);
+      const y =
+        verticalPadding +
+        drawHeight - ((value - minValue) / range) * drawHeight;
+      return { x, y };
+    });
+
+    context.beginPath();
+    context.moveTo(points[0].x, height - verticalPadding);
+    points.forEach((point) => context.lineTo(point.x, point.y));
+    context.lineTo(points[points.length - 1].x, height - verticalPadding);
+    context.closePath();
+    context.fillStyle = config.fillColor;
+    context.fill();
+
+    context.beginPath();
+    points.forEach((point, index) => {
+      if (index === 0) {
+        context.moveTo(point.x, point.y);
+        return;
+      }
+      context.lineTo(point.x, point.y);
+    });
+    context.strokeStyle = config.strokeColor;
+    context.lineWidth = 2;
+    context.stroke();
+
+    this.renderedCanvases.push(nativeCanvas);
   }
 
   private destroyCharts(): void {
-    this.chartInstances.forEach((chart) => chart.destroy());
-    this.chartInstances = [];
+    this.renderedCanvases.forEach((canvas) => {
+      const context = canvas.getContext('2d');
+      if (context) {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    });
+    this.renderedCanvases = [];
   }
 
   private toDateInput(date: Date): string {
