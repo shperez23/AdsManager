@@ -19,4 +19,8 @@ export const appRoutes: Routes = [
     path: 'ad-sets',
     component: DashboardPageComponent,
   },
+  {
+    path: 'insights',
+    component: DashboardPageComponent,
+  },
 ];
