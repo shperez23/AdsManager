@@ -1,0 +1,19 @@
+<section class="space-y-6">
+  <div class="grid gap-4 md:grid-cols-3">
+    <article
+      *ngFor="let metric of metrics"
+      class="rounded-2xl border border-white/10 bg-gradient-to-b from-slate-800/60 to-slate-900/60 p-5"
+    >
+      <p class="text-sm text-slate-300">{{ metric.label }}</p>
+      <p class="mt-3 text-2xl font-semibold text-white">{{ metric.value }}</p>
+      <p class="mt-2 text-xs font-medium text-emerald-300">{{ metric.trend }} vs. last week</p>
+    </article>
+  </div>
+
+  <article class="rounded-2xl border border-white/10 bg-slate-900/40 p-5">
+    <h2 class="text-base font-semibold text-white">Content Area</h2>
+    <p class="mt-2 text-sm text-slate-300">
+      Este bloque representa el área principal para renderizar tablas, gráficas e insights de campañas.
+    </p>
+  </article>
+</section>
