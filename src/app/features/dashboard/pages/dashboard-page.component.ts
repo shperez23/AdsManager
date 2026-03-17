@@ -1,10 +1,18 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { finalize } from 'rxjs';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Subject, finalize, takeUntil } from 'rxjs';
 
-import { DashboardService } from '../../../core/api/services/dashboard.service';
+import {
+  DashboardQueryParams,
+  DashboardService,
+} from '../../../core/api/services/dashboard.service';
 import { ToastType } from '../../../core/notifications/toast.model';
 import { ToastService } from '../../../core/notifications/toast.service';
+import { DashboardSummary } from '../../../shared/models';
+import { EmptyStateComponent } from '../../../shared/ui/states/empty-state.component';
+import { ErrorStateComponent } from '../../../shared/ui/states/error-state.component';
+import { LoadingStateComponent } from '../../../shared/ui/states/loading-state.component';
 
 interface DashboardMetric {
   readonly label: string;
@@ -19,10 +27,10 @@ interface ToastAction {
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule, LoadingStateComponent, EmptyStateComponent, ErrorStateComponent],
   templateUrl: './dashboard-page.component.html',
 })
-export class DashboardPageComponent implements OnInit {
+export class DashboardPageComponent implements OnInit, OnDestroy {
   readonly toastActions: ToastAction[] = [
     { type: 'success', label: 'Success' },
     { type: 'error', label: 'Error' },
@@ -30,8 +38,19 @@ export class DashboardPageComponent implements OnInit {
     { type: 'info', label: 'Info' },
   ];
 
+  readonly filters: DashboardQueryParams = {
+    dateFrom: '',
+    dateTo: '',
+    campaignId: '',
+    adAccountId: '',
+  };
+
   metrics: DashboardMetric[] = [];
   isLoading = false;
+  errorMessage: string | null = null;
+  dashboardSummary: DashboardSummary | null = null;
+
+  private readonly destroy$ = new Subject<void>();
 
   constructor(
     private readonly toastService: ToastService,
@@ -39,23 +58,37 @@ export class DashboardPageComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.isLoading = true;
-    this.dashboardService
-      .getDashboard()
-      .pipe(finalize(() => (this.isLoading = false)))
-      .subscribe({
-        next: (response) => {
-          this.metrics = [
-            { label: 'Spend total', value: `$${response.totalSpend.toLocaleString()}` },
-            { label: 'CTR promedio', value: `${response.ctr?.toFixed(2) ?? '0.00'}%` },
-            { label: 'ROAS', value: `${response.roas?.toFixed(2) ?? '0.00'}x` },
-          ];
-        },
-        error: () => {
-          this.toastService.error({ title: 'Dashboard', message: 'No se pudo cargar el dashboard.' });
-          this.metrics = [];
-        },
-      });
+    this.loadDashboard();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  get hasData(): boolean {
+    if (!this.dashboardSummary) {
+      return false;
+    }
+
+    const { totalSpend, totalClicks, totalImpressions, totalConversions } = this.dashboardSummary;
+    return [totalSpend, totalClicks, totalImpressions, totalConversions].some((metric) => metric > 0);
+  }
+
+  onApplyFilters(): void {
+    this.loadDashboard();
+  }
+
+  onResetFilters(): void {
+    this.filters.dateFrom = '';
+    this.filters.dateTo = '';
+    this.filters.campaignId = '';
+    this.filters.adAccountId = '';
+    this.loadDashboard();
+  }
+
+  onRetry(): void {
+    this.loadDashboard();
   }
 
   showToast(type: ToastType): void {
@@ -63,5 +96,51 @@ export class DashboardPageComponent implements OnInit {
       title: `Notificación ${type}`,
       message: 'Ejemplo de toast integrado con TailwindCSS.',
     });
+  }
+
+  private loadDashboard(): void {
+    this.isLoading = true;
+    this.errorMessage = null;
+
+    this.dashboardService
+      .getDashboard(this.buildQueryParams())
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => (this.isLoading = false)),
+      )
+      .subscribe({
+        next: (response) => {
+          this.dashboardSummary = response;
+          this.metrics = this.mapMetrics(response);
+        },
+        error: () => {
+          this.errorMessage = 'No se pudo cargar el dashboard.';
+          this.dashboardSummary = null;
+          this.metrics = [];
+          this.toastService.error({ title: 'Dashboard', message: this.errorMessage });
+        },
+      });
+  }
+
+  private buildQueryParams(): DashboardQueryParams {
+    return {
+      dateFrom: this.filters.dateFrom || undefined,
+      dateTo: this.filters.dateTo || undefined,
+      campaignId: this.filters.campaignId || undefined,
+      adAccountId: this.filters.adAccountId || undefined,
+    };
+  }
+
+  private mapMetrics(response: DashboardSummary): DashboardMetric[] {
+    const metrics: DashboardMetric[] = [
+      { label: 'Spend total', value: `$${response.totalSpend.toLocaleString()}` },
+      { label: 'CTR promedio', value: `${response.ctr?.toFixed(2) ?? '0.00'}%` },
+      { label: 'ROAS', value: `${response.roas?.toFixed(2) ?? '0.00'}x` },
+      { label: 'Clicks', value: response.totalClicks.toLocaleString() },
+      { label: 'Impresiones', value: response.totalImpressions.toLocaleString() },
+      { label: 'Conversiones', value: response.totalConversions.toLocaleString() },
+    ];
+
+    return metrics;
   }
 }
