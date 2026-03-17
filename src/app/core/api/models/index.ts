@@ -7,3 +7,5 @@ export * from './pagination-response.model';
 export * from './sort-direction.enum';
 export * from './ad-accounts-actions.model';
 export * from './ad-accounts-query-params.model';
+
+export * from './ads-actions.model';
