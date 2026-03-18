@@ -11,6 +11,7 @@ import { AdsPageComponent } from './features/ads/pages/ads-page.component';
 import { DashboardPageComponent } from './features/dashboard/pages/dashboard-page.component';
 import { CampaignsPageComponent } from './features/campaigns/pages/campaigns-page.component';
 import { InsightsPageComponent } from './features/insights/pages/insights-page.component';
+import { MetaConnectionsPageComponent } from './features/meta-connections/pages/meta-connections-page.component';
 
 export const appRoutes: Routes = [
   {
@@ -52,6 +53,10 @@ export const appRoutes: Routes = [
       {
         path: 'insights',
         component: InsightsPageComponent,
+      },
+      {
+        path: 'meta-connections',
+        component: MetaConnectionsPageComponent,
       },
     ],
   },
