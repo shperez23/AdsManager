@@ -19,7 +19,6 @@ export function buildRegisterPayload(value: RegisterFormValue): RegisterRequest 
     tenantName,
     tenantSlug,
     name,
-    fullName: name,
     email: value.email?.trim() ?? '',
     password: value.password ?? '',
   };

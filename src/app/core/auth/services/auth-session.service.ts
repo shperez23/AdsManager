@@ -86,9 +86,7 @@ export class AuthSessionService {
   register(payload: RegisterRequest): Observable<AuthUser> {
     return this.authApi.register(payload).pipe(
       tap((tokens) => this.startSession(tokens)),
-      map(() =>
-        this.hydrateUserAfterAuthentication(payload.email, payload.name ?? payload.fullName),
-      ),
+      map(() => this.hydrateUserAfterAuthentication(payload.email, payload.name)),
     );
   }
 
