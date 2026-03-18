@@ -67,6 +67,7 @@ export class AdsFormComponent implements OnChanges {
         creativeJson: '',
         previewUrl: '',
       });
+      this.adsForm.controls.adSetId.enable({ emitEvent: false });
       return;
     }
 
@@ -77,6 +78,7 @@ export class AdsFormComponent implements OnChanges {
       creativeJson: this.ad.creativeJson ?? '',
       previewUrl: this.ad.previewUrl ?? '',
     });
+    this.adsForm.controls.adSetId.disable({ emitEvent: false });
   }
 
   onSubmit(): void {
@@ -97,8 +99,8 @@ export class AdsFormComponent implements OnChanges {
             previewUrl: value.previewUrl || undefined,
           }
         : {
-            adSetId: value.adSetId,
-            name: value.name,
+            adSetId: value.adSetId.trim(),
+            name: value.name.trim(),
             status: value.status,
             creativeJson: value.creativeJson || undefined,
             previewUrl: value.previewUrl || undefined,

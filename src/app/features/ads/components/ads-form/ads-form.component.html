@@ -4,9 +4,20 @@
   </div>
 
   <form [formGroup]="adsForm" (ngSubmit)="onSubmit()" class="grid gap-4 sm:grid-cols-2">
-    <div>
+    <div *ngIf="!isEditMode">
       <label class="mb-1 block text-sm font-medium text-slate-700">AdSet ID</label>
       <input formControlName="adSetId" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+    </div>
+
+    <div *ngIf="isEditMode">
+      <label class="mb-1 block text-sm font-medium text-slate-700">AdSet ID</label>
+      <input
+        formControlName="adSetId"
+        type="text"
+        readonly
+        class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500"
+      />
+      <p class="mt-1 text-xs text-slate-500">Solo informativo. Swagger no permite reenviar <code>adSetId</code> en update.</p>
     </div>
 
     <div>

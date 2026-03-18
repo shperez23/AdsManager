@@ -29,8 +29,24 @@ export function mapAdAccountsQueryParams(
   return compactQueryParams(params);
 }
 
-export function mapAdsQueryParams(params?: AdsQueryParams): AdsQueryParams | undefined {
-  return compactQueryParams(params);
+export function mapAdsQueryParams(
+  params?: AdsQueryParams,
+): Record<string, string | number | boolean> | undefined {
+  if (!params) {
+    return undefined;
+  }
+
+  const nextParams: Record<string, string | number | boolean | undefined> = {
+    Status: params.Status,
+    CampaignId: params.CampaignId,
+    Page: params.Page,
+    PageSize: params.PageSize,
+    Search: params.Search,
+    SortBy: params.SortBy,
+    SortDirection: params.SortDirection,
+  };
+
+  return compactQueryParams(nextParams) as Record<string, string | number | boolean> | undefined;
 }
 
 export function mapAdSetsQueryParams(

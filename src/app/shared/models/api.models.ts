@@ -83,6 +83,7 @@ export interface Campaign {
 
 export interface Ad {
   id: string;
+  campaignId?: string;
   adSetId: string;
   name: string;
   status: string;
