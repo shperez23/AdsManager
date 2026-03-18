@@ -31,10 +31,10 @@ interface ToastAction {
 })
 export class DashboardPageComponent implements OnInit {
   readonly toastActions: ToastAction[] = [
-    { type: 'success', label: 'Success' },
+    { type: 'success', label: 'Éxito' },
     { type: 'error', label: 'Error' },
-    { type: 'warning', label: 'Warning' },
-    { type: 'info', label: 'Info' },
+    { type: 'warning', label: 'Advertencia' },
+    { type: 'info', label: 'Información' },
   ];
 
   readonly filters: DashboardQueryParams = {
@@ -89,7 +89,7 @@ export class DashboardPageComponent implements OnInit {
   showToast(type: ToastType): void {
     this.toastService[type]({
       title: `Notificación ${type}`,
-      message: 'Ejemplo de toast integrado con TailwindCSS.',
+      message: 'Ejemplo de notificación integrada con TailwindCSS.',
     });
   }
 
@@ -109,10 +109,10 @@ export class DashboardPageComponent implements OnInit {
           this.metrics = this.mapMetrics(response);
         },
         error: (error) => {
-          this.errorMessage = this.requestFeedbackService.resolveMessage(error, 'No se pudo cargar el dashboard.');
+          this.errorMessage = this.requestFeedbackService.resolveMessage(error, 'No se pudo cargar el panel.');
           this.dashboardSummary = null;
           this.metrics = [];
-          this.toastService.error({ title: 'Dashboard', message: this.errorMessage });
+          this.toastService.error({ title: 'Panel', message: this.errorMessage });
         },
       });
   }
@@ -128,10 +128,10 @@ export class DashboardPageComponent implements OnInit {
 
   private mapMetrics(response: DashboardSummary): DashboardMetric[] {
     return [
-      { label: 'Spend total', value: `$${response.totalSpend.toLocaleString()}` },
+      { label: 'Gasto total', value: `$${response.totalSpend.toLocaleString()}` },
       { label: 'CTR promedio', value: `${response.ctr?.toFixed(2) ?? '0.00'}%` },
       { label: 'ROAS', value: `${response.roas?.toFixed(2) ?? '0.00'}x` },
-      { label: 'Clicks', value: response.totalClicks.toLocaleString() },
+      { label: 'Clics', value: response.totalClicks.toLocaleString() },
       { label: 'Impresiones', value: response.totalImpressions.toLocaleString() },
       { label: 'Conversiones', value: response.totalConversions.toLocaleString() },
     ];

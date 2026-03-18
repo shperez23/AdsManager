@@ -58,7 +58,7 @@ export class RulesPageComponent {
           this.selectedRule = null;
           this.reloadKey += 1;
           this.toastService.success({
-            title: 'Rules',
+            title: 'Reglas',
             message:
               event.mode === 'edit'
                 ? 'Regla actualizada correctamente.'
@@ -67,7 +67,7 @@ export class RulesPageComponent {
         },
         error: (error) => {
           this.requestFeedbackService.showError(
-            'Rules',
+            'Reglas',
             error,
             event.mode === 'edit'
               ? 'No se pudo actualizar la regla.'

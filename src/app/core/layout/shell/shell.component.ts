@@ -21,20 +21,20 @@ export class ShellComponent {
   private readonly authSessionService = inject(AuthSessionService);
 
   readonly navigationItems: NavigationItem[] = [
-    { label: 'Dashboard', route: '/', icon: '🏠' },
-    { label: 'Ad Accounts', route: '/ad-accounts', icon: '🧾' },
-    { label: 'Ads', route: '/ads', icon: '📣' },
-    { label: 'Ad Sets', route: '/ad-sets', icon: '🎯' },
-    { label: 'Campaigns', route: '/campaigns', icon: '🧠' },
-    { label: 'Insights', route: '/insights', icon: '📊' },
-    { label: 'Reports', route: '/reports', icon: '📈' },
-    { label: 'Meta Connections', route: '/meta-connections', icon: '🔗' },
-    { label: 'Meta Ops', route: '/meta/operations', icon: '🧩' },
-    { label: 'Meta Campaigns', route: '/meta/campaigns', icon: '🚀' },
-    { label: 'Meta AdSets', route: '/meta/adsets', icon: '🧱' },
-    { label: 'Meta Ads', route: '/meta/ads', icon: '🎨' },
-    { label: 'Meta Insights', route: '/meta/insights', icon: '📡' },
-    { label: 'Rules', route: '/rules', icon: '⚙️' },
+    { label: 'Panel', route: '/', icon: '🏠' },
+    { label: 'Cuentas publicitarias', route: '/ad-accounts', icon: '🧾' },
+    { label: 'Anuncios', route: '/ads', icon: '📣' },
+    { label: 'Conjuntos de anuncios', route: '/ad-sets', icon: '🎯' },
+    { label: 'Campañas', route: '/campaigns', icon: '🧠' },
+    { label: 'Métricas', route: '/insights', icon: '📊' },
+    { label: 'Reportes', route: '/reports', icon: '📈' },
+    { label: 'Conexiones Meta', route: '/meta-connections', icon: '🔗' },
+    { label: 'Operaciones Meta', route: '/meta/operations', icon: '🧩' },
+    { label: 'Campañas Meta', route: '/meta/campaigns', icon: '🚀' },
+    { label: 'Conjuntos Meta', route: '/meta/adsets', icon: '🧱' },
+    { label: 'Anuncios Meta', route: '/meta/ads', icon: '🎨' },
+    { label: 'Métricas Meta', route: '/meta/insights', icon: '📡' },
+    { label: 'Reglas', route: '/rules', icon: '⚙️' },
   ];
 
   readonly userInitials$ = this.authSessionService.user$.pipe(

@@ -7,10 +7,10 @@
     (ngSubmit)="onSubmit()"
   >
     <div class="mb-4">
-      <h3 class="text-lg font-semibold text-slate-900">Crear Meta ad set</h3>
+      <h3 class="text-lg font-semibold text-slate-900">Crear conjunto de anuncios de Meta</h3>
       <p class="text-sm text-slate-600">
         Flujo conectado a <code>POST /meta/ad-accounts/&#123;id&#125;/adsets</code> con cuenta y
-        campaign reales.
+        campañas reales.
       </p>
     </div>
 
@@ -25,7 +25,7 @@
 
     <div class="grid gap-4 lg:grid-cols-2">
       <label class="block">
-        <span class="mb-1.5 block text-sm font-medium text-slate-700">Meta Ad Account</span>
+        <span class="mb-1.5 block text-sm font-medium text-slate-700">Cuenta publicitaria de Meta</span>
         <select
           formControlName="adAccountId"
           class="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm"
@@ -36,12 +36,12 @@
       </label>
 
       <label class="block">
-        <span class="mb-1.5 block text-sm font-medium text-slate-700">Campaign</span>
+        <span class="mb-1.5 block text-sm font-medium text-slate-700">Campaña</span>
         <select
           formControlName="campaignId"
           class="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm"
         >
-          <option value="">Selecciona una campaign</option>
+          <option value="">Selecciona una campaña</option>
           <option *ngFor="let campaign of campaigns" [value]="campaign.id">
             {{ campaign.name }}
           </option>
@@ -58,7 +58,7 @@
       </label>
 
       <label class="block">
-        <span class="mb-1.5 block text-sm font-medium text-slate-700">Status</span>
+        <span class="mb-1.5 block text-sm font-medium text-slate-700">Estado</span>
         <select
           formControlName="status"
           class="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm"
@@ -69,7 +69,7 @@
       </label>
 
       <label class="block">
-        <span class="mb-1.5 block text-sm font-medium text-slate-700">Daily budget</span>
+        <span class="mb-1.5 block text-sm font-medium text-slate-700">Presupuesto diario</span>
         <input
           formControlName="dailyBudget"
           type="number"
@@ -79,7 +79,7 @@
       </label>
 
       <label class="block">
-        <span class="mb-1.5 block text-sm font-medium text-slate-700">Billing event</span>
+        <span class="mb-1.5 block text-sm font-medium text-slate-700">Evento de facturación</span>
         <input
           formControlName="billingEvent"
           type="text"
@@ -89,7 +89,7 @@
       </label>
 
       <label class="block">
-        <span class="mb-1.5 block text-sm font-medium text-slate-700">Optimization goal</span>
+        <span class="mb-1.5 block text-sm font-medium text-slate-700">Objetivo de optimización</span>
         <input
           formControlName="optimizationGoal"
           type="text"
@@ -99,7 +99,7 @@
       </label>
 
       <label class="block lg:col-span-2">
-        <span class="mb-1.5 block text-sm font-medium text-slate-700">Targeting JSON</span>
+        <span class="mb-1.5 block text-sm font-medium text-slate-700">JSON de segmentación</span>
         <textarea
           formControlName="targetingJson"
           rows="5"
@@ -115,7 +115,7 @@
         class="rounded-2xl bg-fuchsia-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-fuchsia-500 disabled:opacity-60"
         [disabled]="isSubmitting"
       >
-        {{ isSubmitting ? 'Creando...' : 'Crear ad set' }}
+        {{ isSubmitting ? 'Creando...' : 'Crear conjunto de anuncios' }}
       </button>
     </div>
   </form>

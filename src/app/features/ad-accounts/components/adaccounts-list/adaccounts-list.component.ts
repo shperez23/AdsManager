@@ -146,7 +146,7 @@ export class AdaccountsListComponent implements OnInit, OnChanges {
       .subscribe({
         next: () => {
           this.toastService.success({
-            title: 'Ad Accounts',
+            title: 'Cuentas publicitarias',
             message: `Sincronización iniciada para ${account.name}.`,
           });
           this.loadAdAccounts();
@@ -156,7 +156,7 @@ export class AdaccountsListComponent implements OnInit, OnChanges {
             error,
             'No se pudo sincronizar la cuenta. Intenta de nuevo.',
           );
-          this.toastService.error({ title: 'Ad Accounts', message: this.errorMessage });
+          this.toastService.error({ title: 'Cuentas publicitarias', message: this.errorMessage });
         },
       });
   }

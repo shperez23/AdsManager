@@ -44,7 +44,7 @@ export class CampaignsPageComponent {
           this.selectedCampaign = campaignDetail;
         },
         error: (error) => {
-          this.requestFeedbackService.showError('Campaigns', error, 'No se pudo cargar la campaign seleccionada.');
+          this.requestFeedbackService.showError('Campañas', error, 'No se pudo cargar la campaña seleccionada.');
         },
       });
   }
@@ -70,12 +70,12 @@ export class CampaignsPageComponent {
           this.selectedCampaign = null;
           this.reloadKey += 1;
           this.toastService.success({
-            title: 'Campaigns',
-            message: event.mode === 'edit' ? 'Campaign actualizada correctamente.' : 'Campaign creada correctamente.',
+            title: 'Campañas',
+            message: event.mode === 'edit' ? 'Campaña actualizada correctamente.' : 'Campaña creada correctamente.',
           });
         },
         error: (error) => {
-          this.requestFeedbackService.showError('Campaigns', error, 'No se pudo guardar la campaign.');
+          this.requestFeedbackService.showError('Campañas', error, 'No se pudo guardar la campaña.');
         },
       });
   }

@@ -108,8 +108,8 @@ export class MetaCampaignsPageComponent implements OnInit {
       .subscribe({
         next: () => {
           this.toastService.success({
-            title: 'Meta Campaigns',
-            message: 'Campaign creada correctamente.',
+            title: 'Campañas Meta',
+            message: 'Campaña creada correctamente.',
           });
           this.form.patchValue({
             name: '',
@@ -122,7 +122,7 @@ export class MetaCampaignsPageComponent implements OnInit {
         error: (error) => {
           this.errorMessage = this.requestFeedbackService.resolveMessage(
             error,
-            'No se pudo crear la campaign de Meta.',
+            'No se pudo crear la campaña de Meta.',
           );
         },
       });
@@ -138,7 +138,7 @@ export class MetaCampaignsPageComponent implements OnInit {
         next: () => {
           const adAccountId = this.form.controls.adAccountId.value;
           this.toastService.success({
-            title: 'Meta Campaigns',
+            title: 'Campañas Meta',
             message: 'Estado actualizado correctamente.',
           });
           if (adAccountId) {
@@ -148,7 +148,7 @@ export class MetaCampaignsPageComponent implements OnInit {
         error: (error) => {
           this.errorMessage = this.requestFeedbackService.resolveMessage(
             error,
-            'No se pudo actualizar el estado de la campaign.',
+            'No se pudo actualizar el estado de la campaña.',
           );
         },
       });
@@ -217,7 +217,7 @@ export class MetaCampaignsPageComponent implements OnInit {
           this.campaigns = [];
           this.errorMessage = this.requestFeedbackService.resolveMessage(
             error,
-            'No se pudieron cargar las campaigns de Meta.',
+            'No se pudieron cargar las campañas de Meta.',
           );
         },
       });

@@ -49,8 +49,8 @@ export class AdsListComponent implements OnInit, OnChanges {
     { value: '', label: 'Sin orden' },
     { value: 'name', label: 'Nombre' },
     { value: 'status', label: 'Estado' },
-    { value: 'campaignId', label: 'Campaign ID' },
-    { value: 'adSetId', label: 'Ad Set ID' },
+    { value: 'campaignId', label: 'ID de campaña' },
+    { value: 'adSetId', label: 'ID del conjunto de anuncios' },
     { value: 'createdAt', label: 'Fecha de creación' },
     { value: 'updatedAt', label: 'Fecha de actualización' },
   ];

@@ -62,14 +62,14 @@ export class AdAccountsPageComponent implements OnInit {
       .subscribe({
         next: () => {
           this.toastService.success({
-            title: 'Ad Accounts',
+            title: 'Cuentas publicitarias',
             message: 'Importación desde Meta iniciada correctamente.',
           });
           this.reloadKey += 1;
         },
         error: (error) => {
           this.requestFeedbackService.showError(
-            'Ad Accounts',
+            'Cuentas publicitarias',
             error,
             'No se pudo iniciar la importación desde Meta.',
           );

@@ -2,13 +2,13 @@
   <div class="mb-5 flex items-center justify-between gap-3">
     <div>
       <h2 class="text-lg font-semibold text-slate-900">
-        {{ isEditMode ? 'Editar ad' : 'Crear ad' }}
+        {{ isEditMode ? 'Editar anuncio' : 'Crear anuncio' }}
       </h2>
       <p class="mt-1 text-sm text-slate-500">
         {{
           isEditMode
             ? 'La edición carga el detalle real desde GET /ads/{id}.'
-            : 'Selecciona un Ad Set real desde la API para evitar IDs manuales.'
+            : 'Selecciona un conjunto de anuncios real desde la API para evitar IDs manuales.'
         }}
       </p>
     </div>
@@ -27,19 +27,19 @@
     *ngIf="isLoadingAd"
     class="mb-4 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700"
   >
-    Cargando detalle completo del ad...
+    Cargando detalle completo del anuncio...
   </div>
 
   <form [formGroup]="adsForm" (ngSubmit)="onSubmit()" class="grid gap-4 sm:grid-cols-2">
     <div class="sm:col-span-2">
-      <label class="mb-1 block text-sm font-medium text-slate-700">Ad Set</label>
+      <label class="mb-1 block text-sm font-medium text-slate-700">Conjunto de anuncios</label>
       <select
         formControlName="adSetId"
         class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
         [disabled]="isEditMode || isLoadingAdSetOptions"
       >
         <option value="">
-          {{ isLoadingAdSetOptions ? 'Cargando Ad Sets...' : 'Selecciona un Ad Set' }}
+          {{ isLoadingAdSetOptions ? 'Cargando conjuntos de anuncios...' : 'Selecciona un conjunto de anuncios' }}
         </option>
         <option *ngFor="let adSet of adSetOptions" [value]="adSet.id">
           {{ adSet.name || adSet.id }} · {{ adSet.campaignId }}
@@ -51,7 +51,7 @@
     </div>
 
     <div>
-      <label class="mb-1 block text-sm font-medium text-slate-700">Status</label>
+      <label class="mb-1 block text-sm font-medium text-slate-700">Estado</label>
       <select
         formControlName="status"
         class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
@@ -70,7 +70,7 @@
     </div>
 
     <div class="sm:col-span-2">
-      <label class="mb-1 block text-sm font-medium text-slate-700">Creative JSON</label>
+      <label class="mb-1 block text-sm font-medium text-slate-700">JSON creativo</label>
       <textarea
         formControlName="creativeJson"
         rows="3"
@@ -79,7 +79,7 @@
     </div>
 
     <div class="sm:col-span-2">
-      <label class="mb-1 block text-sm font-medium text-slate-700">Preview URL</label>
+      <label class="mb-1 block text-sm font-medium text-slate-700">URL de vista previa</label>
       <input
         formControlName="previewUrl"
         type="text"

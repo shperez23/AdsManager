@@ -1,17 +1,17 @@
 <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-  <h2 class="mb-3 text-lg font-semibold text-slate-900">Campaigns</h2>
+  <h2 class="mb-3 text-lg font-semibold text-slate-900">Campañas</h2>
   <p *ngIf="isLoading" class="text-sm text-slate-500">Cargando...</p>
   <div class="space-y-2" *ngIf="!isLoading">
     <article *ngFor="let campaign of campaigns" class="flex items-center justify-between rounded-lg border border-slate-200 p-3">
       <div>
         <p class="text-sm font-medium text-slate-900">{{ campaign.name }}</p>
         <p class="text-xs text-slate-500">
-          {{ campaign.id }} · {{ campaign.status }} · {{ campaign.objective || 'Sin objective' }}
+          {{ campaign.id }} · {{ campaign.status }} · {{ campaign.objective || 'Sin objetivo' }}
         </p>
-        <p class="text-xs text-slate-500">Ad account: {{ campaign.adAccountId }}</p>
+        <p class="text-xs text-slate-500">Cuenta publicitaria: {{ campaign.adAccountId }}</p>
         <p class="text-xs text-slate-500">
-          Daily: {{ (campaign.dailyBudget ?? 0) | currency: 'USD' : 'symbol' : '1.0-0' }} ·
-          Lifetime: {{ (campaign.lifetimeBudget ?? 0) | currency: 'USD' : 'symbol' : '1.0-0' }}
+          Diario: {{ (campaign.dailyBudget ?? 0) | currency: 'USD' : 'symbol' : '1.0-0' }} ·
+          Total: {{ (campaign.lifetimeBudget ?? 0) | currency: 'USD' : 'symbol' : '1.0-0' }}
         </p>
       </div>
       <div class="flex gap-2">

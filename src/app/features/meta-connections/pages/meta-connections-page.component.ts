@@ -80,7 +80,7 @@ export class MetaConnectionsPageComponent implements OnInit {
             event.mode === 'edit'
               ? 'Conexión actualizada correctamente.'
               : 'Conexión creada correctamente.';
-          this.toastService.success({ title: 'Meta Connections', message: this.successMessage });
+          this.toastService.success({ title: 'Conexiones Meta', message: this.successMessage });
           this.selectedConnection = null;
           this.loadConnections();
         },
@@ -89,7 +89,7 @@ export class MetaConnectionsPageComponent implements OnInit {
             error,
             'No fue posible guardar la conexión Meta.',
           );
-          this.toastService.error({ title: 'Meta Connections', message: this.errorMessage });
+          this.toastService.error({ title: 'Conexiones Meta', message: this.errorMessage });
         },
       });
   }
@@ -162,12 +162,12 @@ export class MetaConnectionsPageComponent implements OnInit {
       .subscribe({
         next: () => {
           this.successMessage = successMessage;
-          this.toastService.success({ title: 'Meta Connections', message: successMessage });
+          this.toastService.success({ title: 'Conexiones Meta', message: successMessage });
           this.loadConnections();
         },
         error: (error) => {
           this.errorMessage = this.requestFeedbackService.resolveMessage(error, fallbackErrorMessage);
-          this.toastService.error({ title: 'Meta Connections', message: this.errorMessage });
+          this.toastService.error({ title: 'Conexiones Meta', message: this.errorMessage });
         },
       });
   }

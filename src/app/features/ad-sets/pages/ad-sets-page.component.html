@@ -2,7 +2,7 @@
   <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
     <div class="mb-4 flex items-center justify-between gap-3">
       <h2 class="text-lg font-semibold text-slate-900">
-        {{ isEditMode ? 'Editar ad set' : 'Crear ad set' }}
+        {{ isEditMode ? 'Editar conjunto de anuncios' : 'Crear conjunto de anuncios' }}
       </h2>
       <button
         *ngIf="isEditMode"
@@ -16,20 +16,20 @@
     </div>
 
     <p *ngIf="isLoadingAdSet" class="mb-4 text-sm text-slate-500">
-      Cargando detalles del ad set...
+      Cargando detalles del conjunto de anuncios...
     </p>
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="grid gap-3 sm:grid-cols-2">
       <label class="flex flex-col gap-1 text-xs font-medium text-slate-700">
-        Campaign ID
+        ID de campaña
         <input
           formControlName="campaignId"
           class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal"
-          placeholder="Campaign ID"
+          placeholder="ID de campaña"
           [readonly]="isEditMode"
         />
         <span *ngIf="hasError('campaignId', 'required')" class="text-xs text-rose-600"
-          >Ingresa el Campaign ID.</span
+          >Ingresa el ID de campaña.</span
         >
       </label>
 
@@ -53,7 +53,7 @@
           placeholder="Nombre"
         />
         <span *ngIf="hasError('name', 'required')" class="text-xs text-rose-600"
-          >Ingresa el nombre del ad set.</span
+          >Ingresa el nombre del conjunto de anuncios.</span
         >
         <span *ngIf="hasError('name', 'maxlength')" class="text-xs text-rose-600"
           >El nombre no puede superar los 120 caracteres.</span
@@ -61,7 +61,7 @@
       </label>
 
       <label class="flex flex-col gap-1 text-xs font-medium text-slate-700">
-        Daily budget
+        Presupuesto diario
         <input
           formControlName="dailyBudget"
           type="number"
@@ -74,43 +74,43 @@
       </label>
 
       <label class="flex flex-col gap-1 text-xs font-medium text-slate-700">
-        Billing event
+        Evento de facturación
         <input
           formControlName="billingEvent"
           class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal"
           placeholder="IMPRESSIONS"
         />
         <span *ngIf="hasError('billingEvent', 'maxlength')" class="text-xs text-rose-600"
-          >El billing event no puede superar los 120 caracteres.</span
+          >El evento de facturación no puede superar los 120 caracteres.</span
         >
       </label>
 
       <label class="flex flex-col gap-1 text-xs font-medium text-slate-700">
-        Optimization goal
+        Objetivo de optimización
         <input
           formControlName="optimizationGoal"
           class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal"
           placeholder="REACH"
         />
         <span *ngIf="hasError('optimizationGoal', 'maxlength')" class="text-xs text-rose-600"
-          >El optimization goal no puede superar los 120 caracteres.</span
+          >El objetivo de optimización no puede superar los 120 caracteres.</span
         >
       </label>
 
       <label class="flex flex-col gap-1 text-xs font-medium text-slate-700">
-        Bid strategy
+        Estrategia de puja
         <input
           formControlName="bidStrategy"
           class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal"
           placeholder="LOWEST_COST"
         />
         <span *ngIf="hasError('bidStrategy', 'maxlength')" class="text-xs text-rose-600"
-          >La bid strategy no puede superar los 120 caracteres.</span
+          >La estrategia de puja no puede superar los 120 caracteres.</span
         >
       </label>
 
       <label class="flex flex-col gap-1 text-xs font-medium text-slate-700 sm:col-span-2">
-        Targeting JSON
+        JSON de segmentación
         <textarea
           formControlName="targetingJson"
           rows="3"

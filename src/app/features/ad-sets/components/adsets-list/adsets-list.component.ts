@@ -59,8 +59,8 @@ export class AdsetsListComponent implements OnInit, OnChanges {
     { value: '', label: 'Sin orden' },
     { value: 'name', label: 'Nombre' },
     { value: 'status', label: 'Estado' },
-    { value: 'campaignId', label: 'Campaign ID' },
-    { value: 'dailyBudget', label: 'Daily budget' },
+    { value: 'campaignId', label: 'ID de campaña' },
+    { value: 'dailyBudget', label: 'Presupuesto diario' },
     { value: 'createdAt', label: 'Fecha de creación' },
     { value: 'updatedAt', label: 'Fecha de actualización' },
   ];
@@ -173,7 +173,7 @@ export class AdsetsListComponent implements OnInit, OnChanges {
         error: (error) => {
           this.errorMessage = this.requestFeedbackService.resolveMessage(
             error,
-            'No se pudo actualizar el estado del ad set.',
+            'No se pudo actualizar el estado del conjunto de anuncios.',
           );
         },
       });
@@ -247,7 +247,7 @@ export class AdsetsListComponent implements OnInit, OnChanges {
         error: (error) => {
           this.errorMessage = this.requestFeedbackService.resolveMessage(
             error,
-            'No se pudieron cargar los ad sets.',
+            'No se pudieron cargar los conjuntos de anuncios.',
           );
           this.adSets = [];
           this.totalItems = 0;

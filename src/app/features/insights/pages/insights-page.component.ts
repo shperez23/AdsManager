@@ -15,9 +15,9 @@ export class InsightsPageComponent {
   selectedTab: InsightsTab = 'campaigns';
 
   readonly tabs: Array<{ key: InsightsTab; label: string }> = [
-    { key: 'campaigns', label: 'Campaigns' },
-    { key: 'adsets', label: 'Ad Sets' },
-    { key: 'ads', label: 'Ads' },
+    { key: 'campaigns', label: 'Campañas' },
+    { key: 'adsets', label: 'Conjuntos de anuncios' },
+    { key: 'ads', label: 'Anuncios' },
   ];
 
   onSelectTab(tab: InsightsTab): void {

@@ -1,6 +1,6 @@
 <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
   <div class="mb-4 flex items-center justify-between gap-3">
-    <h2 class="text-lg font-semibold text-slate-900">{{ isEditMode ? 'Editar campaign' : 'Crear campaign' }}</h2>
+    <h2 class="text-lg font-semibold text-slate-900">{{ isEditMode ? 'Editar campaña' : 'Crear campaña' }}</h2>
     <button
       *ngIf="isEditMode"
       type="button"
@@ -14,14 +14,14 @@
 
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="grid gap-3 sm:grid-cols-2">
     <label class="flex flex-col gap-1 text-xs font-medium text-slate-700">
-      Ad Account ID
+      ID de la cuenta publicitaria
       <input
         formControlName="adAccountId"
         class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal"
-        placeholder="Ad Account ID"
+        placeholder="ID de la cuenta publicitaria"
         [readonly]="isEditMode"
       />
-      <span *ngIf="hasError('adAccountId', 'required')" class="text-xs text-rose-600">Ingresa el Ad Account ID.</span>
+      <span *ngIf="hasError('adAccountId', 'required')" class="text-xs text-rose-600">Ingresa el ID de la cuenta publicitaria.</span>
     </label>
 
     <label class="flex flex-col gap-1 text-xs font-medium text-slate-700">
@@ -34,40 +34,40 @@
     <label class="flex flex-col gap-1 text-xs font-medium text-slate-700 sm:col-span-2">
       Nombre
       <input formControlName="name" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal" placeholder="Nombre" />
-      <span *ngIf="hasError('name', 'required')" class="text-xs text-rose-600">Ingresa el nombre de la campaign.</span>
+      <span *ngIf="hasError('name', 'required')" class="text-xs text-rose-600">Ingresa el nombre de la campaña.</span>
       <span *ngIf="hasError('name', 'maxlength')" class="text-xs text-rose-600">El nombre no puede superar los 120 caracteres.</span>
     </label>
 
     <label class="flex flex-col gap-1 text-xs font-medium text-slate-700 sm:col-span-2">
-      Objective
+      Objetivo
       <input
         formControlName="objective"
         class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal"
         placeholder="CONVERSIONS"
       />
-      <span *ngIf="hasError('objective', 'maxlength')" class="text-xs text-rose-600">El objective no puede superar los 120 caracteres.</span>
+      <span *ngIf="hasError('objective', 'maxlength')" class="text-xs text-rose-600">El objetivo no puede superar los 120 caracteres.</span>
     </label>
 
     <label class="flex flex-col gap-1 text-xs font-medium text-slate-700">
-      Daily budget
+      Presupuesto diario
       <input formControlName="dailyBudget" type="number" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal" placeholder="0" />
       <span *ngIf="hasError('dailyBudget', 'min')" class="text-xs text-rose-600">Ingresa un presupuesto diario válido.</span>
     </label>
 
     <label class="flex flex-col gap-1 text-xs font-medium text-slate-700">
-      Lifetime budget
+      Presupuesto total
       <input formControlName="lifetimeBudget" type="number" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal" placeholder="0" />
       <span *ngIf="hasError('lifetimeBudget', 'min')" class="text-xs text-rose-600">Ingresa un presupuesto total válido.</span>
     </label>
 
     <ng-container *ngIf="isEditMode">
       <label class="flex flex-col gap-1 text-xs font-medium text-slate-700">
-        Start date
+        Fecha de inicio
         <input formControlName="startDate" type="datetime-local" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal" />
       </label>
 
       <label class="flex flex-col gap-1 text-xs font-medium text-slate-700">
-        End date
+        Fecha de finalización
         <input formControlName="endDate" type="datetime-local" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal" />
       </label>
     </ng-container>
