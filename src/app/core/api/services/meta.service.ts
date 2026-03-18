@@ -44,8 +44,10 @@ export class MetaService {
     dateTo?: string,
     level?: string,
   ): Observable<InsightsResponse> {
+    const normalizedAdAccountId = normalizeMetaAdAccountId(adAccountId);
+
     return this.baseApiService
-      .get<unknown>(`${this.endpoint}/ad-accounts/${adAccountId}/insights`, {
+      .get<unknown>(`${this.endpoint}/ad-accounts/${normalizedAdAccountId}/insights`, {
         params: { since: dateFrom, until: dateTo, level },
       })
       .pipe(map((response) => normalizeInsightsResponse(response)));
@@ -81,11 +83,13 @@ export class MetaService {
   }
 
   createMetaAdSet(adAccountId: string, payload: MetaAdSetCreateRequest): Observable<MetaAdSet> {
+    const normalizedAdAccountId = normalizeMetaAdAccountId(adAccountId);
+
     return this.baseApiService
       .post<
         unknown,
         MetaAdSetCreateRequest
-      >(`${this.endpoint}/ad-accounts/${adAccountId}/adsets`, payload)
+      >(`${this.endpoint}/ad-accounts/${normalizedAdAccountId}/adsets`, payload)
       .pipe(map((response) => mapMetaAdSetDtoToViewModel(normalizeEntity(response))));
   }
 
