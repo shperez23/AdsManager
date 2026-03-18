@@ -1,0 +1,10 @@
+<div class="space-y-4">
+  <app-rules-form
+    [rule]="selectedRule"
+    [isSubmitting]="isSubmitting"
+    (cancelEdit)="onCancelEdit()"
+    (submitForm)="onSubmit($event)"
+  ></app-rules-form>
+
+  <app-rules-list [reloadKey]="reloadKey" (editRule)="onEditRule($event)"></app-rules-list>
+</div>
