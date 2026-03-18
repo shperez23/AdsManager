@@ -1,5 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
+import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject, Observable, catchError, finalize, map, of, tap } from 'rxjs';
 
 import {
@@ -35,6 +36,7 @@ export class AuthSessionService {
     private readonly authApi: AuthService,
     private readonly toastService: ToastService,
     private readonly router: Router,
+    @Inject(PLATFORM_ID) private readonly platformId: object,
   ) {
     this.hydrateSessionFromStorage();
   }
@@ -49,6 +51,10 @@ export class AuthSessionService {
 
   get isAuthenticated(): boolean {
     return this.hasValidAccessToken();
+  }
+
+  get isBrowser(): boolean {
+    return isPlatformBrowser(this.platformId);
   }
 
   login(payload: LoginRequest): Observable<AuthUser> {
@@ -207,27 +213,27 @@ export class AuthSessionService {
   }
 
   private getStorageItem(key: string): string | null {
-    if (typeof window === 'undefined') {
+    if (!this.isBrowser) {
       return null;
     }
 
-    return window.localStorage.getItem(key);
+    return globalThis.localStorage.getItem(key);
   }
 
   private setStorageItem(key: string, value: string): void {
-    if (typeof window === 'undefined') {
+    if (!this.isBrowser) {
       return;
     }
 
-    window.localStorage.setItem(key, value);
+    globalThis.localStorage.setItem(key, value);
   }
 
   private removeStorageItem(key: string): void {
-    if (typeof window === 'undefined') {
+    if (!this.isBrowser) {
       return;
     }
 
-    window.localStorage.removeItem(key);
+    globalThis.localStorage.removeItem(key);
   }
 
   private resolveExpiryDate(tokens: AuthTokensResponse): number {

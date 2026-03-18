@@ -10,9 +10,11 @@ describe('authGuard', () => {
   let router: jasmine.SpyObj<Router>;
 
   beforeEach(() => {
-    authSessionService = jasmine.createSpyObj<AuthSessionService>('AuthSessionService', [
-      'hasValidAccessToken',
-    ]);
+    authSessionService = jasmine.createSpyObj<AuthSessionService>(
+      'AuthSessionService',
+      ['hasValidAccessToken'],
+      { isBrowser: true },
+    );
     router = jasmine.createSpyObj<Router>('Router', ['createUrlTree']);
 
     TestBed.configureTestingModule({
@@ -22,6 +24,17 @@ describe('authGuard', () => {
         { provide: Router, useValue: router },
       ],
     });
+  });
+
+  it('should allow access during server-side evaluation', () => {
+    Object.defineProperty(authSessionService, 'isBrowser', { value: false });
+
+    const result = TestBed.runInInjectionContext(() =>
+      authGuard({} as never, { url: '/reports' } as never),
+    );
+
+    expect(result).toBeTrue();
+    expect(authSessionService.hasValidAccessToken).not.toHaveBeenCalled();
   });
 
   it('should allow access when the token is still valid right now', () => {
