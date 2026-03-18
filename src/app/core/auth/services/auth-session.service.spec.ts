@@ -9,7 +9,10 @@ describe('AuthSessionService', () => {
   let authApi: jasmine.SpyObj<AuthService>;
   let toastService: jasmine.SpyObj<ToastService>;
   let router: jasmine.SpyObj<Router>;
-  let service: AuthSessionService;
+
+  function createService(platformId: unknown = 'browser'): AuthSessionService {
+    return new AuthSessionService(authApi, toastService, router, platformId as object);
+  }
 
   beforeEach(() => {
     window.localStorage.clear();
@@ -26,11 +29,28 @@ describe('AuthSessionService', () => {
       'error',
     ]);
     router = jasmine.createSpyObj<Router>('Router', ['navigate', 'navigateByUrl']);
+  });
 
-    service = new AuthSessionService(authApi, toastService, router);
+  it('should not hydrate the session from localStorage while running on the server', () => {
+    window.localStorage.setItem(
+      'adsmanager.auth.session',
+      JSON.stringify({
+        accessToken: 'opaque-token',
+        refreshToken: 'refresh-token',
+        expiresAt: Date.now() + 60_000,
+      }),
+    );
+
+    const service = createService('server');
+
+    expect(service.isBrowser).toBeFalse();
+    expect(service.accessToken).toBeNull();
+    expect(authApi.me).not.toHaveBeenCalled();
   });
 
   it('should keep the session valid when the backend omits expiresIn', () => {
+    const service = createService();
+
     authApi.login.and.returnValue(
       of({
         accessToken: 'opaque-token',
@@ -57,6 +77,8 @@ describe('AuthSessionService', () => {
   });
 
   it('should keep the session and return a fallback user when loading the profile fails after login', () => {
+    const service = createService();
+
     authApi.login.and.returnValue(
       of({
         accessToken: 'opaque-token',
