@@ -348,13 +348,13 @@ export interface CreateRuleRequest {
 }
 
 export interface UpdateRuleRequest {
-  name?: string;
-  entityLevel?: RuleEntityLevel;
-  metric?: RuleMetric;
-  operator?: RuleOperator;
-  threshold?: number;
-  action?: RuleAction;
-  isActive?: boolean;
+  name: string;
+  entityLevel: RuleEntityLevel;
+  metric: RuleMetric;
+  operator: RuleOperator;
+  threshold: number;
+  action: RuleAction;
+  isActive: boolean;
 }
 
 export interface ApiError {

@@ -102,8 +102,23 @@ export function mapCampaignsQueryParams(
   return compactQueryParams(nextParams) as Record<string, string | number | boolean> | undefined;
 }
 
-export function mapRulesQueryParams(params?: RulesQueryParams): RulesQueryParams | undefined {
-  return compactQueryParams(params);
+export function mapRulesQueryParams(
+  params?: RulesQueryParams,
+): Record<string, string | number | boolean> | undefined {
+  if (!params) {
+    return undefined;
+  }
+
+  const nextParams: Record<string, string | number | boolean | undefined> = {
+    Status: params.Status,
+    Page: params.Page,
+    PageSize: params.PageSize,
+    Search: params.Search,
+    SortBy: params.SortBy,
+    SortDirection: params.SortDirection,
+  };
+
+  return compactQueryParams(nextParams) as Record<string, string | number | boolean> | undefined;
 }
 
 export function mapDashboardQueryParams(

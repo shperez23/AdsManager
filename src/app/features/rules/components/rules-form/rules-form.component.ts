@@ -24,9 +24,11 @@ import {
   UpdateRuleRequest,
 } from '../../../../shared/models';
 
+type RuleMutationRequest = CreateRuleRequest & UpdateRuleRequest;
+
 export interface RuleFormSubmitEvent {
   mode: 'create' | 'edit';
-  value: CreateRuleRequest | UpdateRuleRequest;
+  value: RuleMutationRequest;
 }
 
 @Component({
@@ -96,7 +98,7 @@ export class RulesFormComponent implements OnChanges {
     }
 
     const value = this.form.getRawValue();
-    const payload = {
+    const payload: RuleMutationRequest = {
       name: value.name.trim(),
       entityLevel: value.entityLevel,
       metric: value.metric,
