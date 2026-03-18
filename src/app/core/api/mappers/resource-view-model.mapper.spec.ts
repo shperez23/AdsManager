@@ -75,4 +75,48 @@ describe('resource-view-model.mapper', () => {
     expect(response.hasNext).toBeFalse();
     expect(response.hasPrevious).toBeFalse();
   });
+
+  it('should unwrap envelope payloads with nested data.items metadata', () => {
+    const response = mapPaginatedResponseDtoToViewModel(
+      {
+        success: true,
+        message: 'OK',
+        data: {
+          items: [
+            {
+              id: '7b5f2860-adb1-4dff-8ca6-5a48813300d2',
+              metaAccountId: 'act_354012118823245',
+              name: 'Sergio Perez',
+              currency: 'USD',
+              timezoneName: 'Pacific/Galapagos',
+              status: '1',
+            },
+          ],
+          page: 1,
+          pageSize: 10,
+          total: 2,
+          totalPages: 1,
+        },
+      },
+      mapAdAccountDtoToViewModel,
+    );
+
+    expect(response).toEqual({
+      items: [
+        {
+          id: '7b5f2860-adb1-4dff-8ca6-5a48813300d2',
+          name: 'Sergio Perez',
+          status: 'ACTIVE',
+          currency: 'USD',
+          timezone: 'Pacific/Galapagos',
+        },
+      ],
+      page: 1,
+      pageSize: 10,
+      totalItems: 2,
+      totalPages: 1,
+      hasNext: false,
+      hasPrevious: false,
+    });
+  });
 });
