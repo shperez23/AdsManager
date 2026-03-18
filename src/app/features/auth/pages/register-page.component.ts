@@ -1,11 +1,19 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { distinctUntilChanged, finalize } from 'rxjs';
 
 import { AuthSessionService } from '../../../core/auth/services/auth-session.service';
 import { ToastService } from '../../../core/notifications/toast.service';
+import {
+  buildRegisterPayload,
+  extractApiErrorMessage,
+  slugifyTenantName,
+} from '../../../shared/utils/auth-form.util';
+
+const TENANT_SLUG_PATTERN = '^[a-z0-9]+(?:-[a-z0-9]+)*$';
 
 @Component({
   selector: 'app-register-page',
@@ -18,16 +26,35 @@ export class RegisterPageComponent {
   private readonly authSessionService = inject(AuthSessionService);
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   isSubmitting = false;
 
   readonly form = this.formBuilder.group({
     tenantName: ['', [Validators.required]],
-    tenantSlug: ['', [Validators.required]],
+    tenantSlug: ['', [Validators.required, Validators.pattern(TENANT_SLUG_PATTERN)]],
     name: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
+
+  constructor() {
+    this.form.controls.tenantName.valueChanges
+      .pipe(distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe((tenantName) => {
+        const tenantSlugControl = this.form.controls.tenantSlug;
+        if (tenantSlugControl.dirty) {
+          return;
+        }
+
+        tenantSlugControl.setValue(slugifyTenantName(tenantName), { emitEvent: false });
+      });
+  }
+
+  normalizeTenantSlug(): void {
+    const tenantSlugControl = this.form.controls.tenantSlug;
+    tenantSlugControl.setValue(slugifyTenantName(tenantSlugControl.value), { emitEvent: false });
+  }
 
   onSubmit(): void {
     if (this.form.invalid || this.isSubmitting) {
@@ -35,16 +62,11 @@ export class RegisterPageComponent {
       return;
     }
 
+    this.normalizeTenantSlug();
     this.isSubmitting = true;
 
     this.authSessionService
-      .register({
-        tenantName: this.form.value.tenantName ?? undefined,
-        tenantSlug: this.form.value.tenantSlug ?? undefined,
-        name: this.form.value.name ?? undefined,
-        email: this.form.value.email ?? '',
-        password: this.form.value.password ?? '',
-      })
+      .register(buildRegisterPayload(this.form.getRawValue()))
       .pipe(finalize(() => (this.isSubmitting = false)))
       .subscribe({
         next: () => {
@@ -54,10 +76,13 @@ export class RegisterPageComponent {
           });
           this.router.navigateByUrl('/');
         },
-        error: () => {
+        error: (error) => {
           this.toastService.error({
             title: 'Registro fallido',
-            message: 'No se pudo completar el registro. Revisa los datos e intenta nuevamente.',
+            message: extractApiErrorMessage(
+              error,
+              'No se pudo completar el registro. Revisa los datos e intenta nuevamente.',
+            ),
           });
         },
       });
