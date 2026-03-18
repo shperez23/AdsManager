@@ -68,7 +68,13 @@ export function mapInsightsReportResponseDtoToViewModel(dto: InsightsReportRespo
 }
 
 export function mapMetaConnectionDtoToViewModel(dto: MetaConnection): MetaConnection {
-  return { ...dto };
+  return {
+    ...dto,
+    tokenExpiration: normalizeOptionalDate(dto.tokenExpiration),
+    createdAt: normalizeOptionalDate(dto.createdAt),
+    updatedAt: normalizeOptionalDate(dto.updatedAt),
+    status: normalizeOptionalString(dto.status),
+  };
 }
 
 function mapInsightMetricsDtoToViewModel(dto: InsightMetrics): InsightMetrics {
@@ -77,4 +83,30 @@ function mapInsightMetricsDtoToViewModel(dto: InsightMetrics): InsightMetrics {
 
 function normalizeOptionalNumber(value?: number | null): number | undefined {
   return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+}
+
+function normalizeOptionalDate(value?: string | null): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const normalizedValue = value.trim();
+  if (!normalizedValue || normalizedValue.startsWith('0001-01-01')) {
+    return undefined;
+  }
+
+  return normalizedValue;
+}
+
+function normalizeOptionalString(value?: string | number | null): string | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return String(value);
+  }
+
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  const normalizedValue = value.trim();
+  return normalizedValue.length > 0 ? normalizedValue : undefined;
 }

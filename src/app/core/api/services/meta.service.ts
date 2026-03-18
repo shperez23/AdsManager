@@ -72,26 +72,26 @@ export class MetaService {
 
   getConnections(): Observable<MetaConnection[]> {
     return this.baseApiService
-      .get<MetaConnection[]>(`${this.endpoint}/connections`)
-      .pipe(map((connections) => connections.map(mapMetaConnectionDtoToViewModel)));
+      .get<unknown>(`${this.endpoint}/connections`)
+      .pipe(map((response) => normalizeMetaConnectionsResponse(response).map(mapMetaConnectionDtoToViewModel)));
   }
 
   createConnection(payload: CreateMetaConnectionRequest): Observable<MetaConnection> {
     return this.baseApiService
       .post<
-        MetaConnection,
+        unknown,
         CreateMetaConnectionRequest
       >(`${this.endpoint}/connections`, this.sanitizeConnectionPayload(payload))
-      .pipe(map(mapMetaConnectionDtoToViewModel));
+      .pipe(map((response) => mapMetaConnectionDtoToViewModel(normalizeMetaConnectionResponse(response))));
   }
 
   updateConnection(id: string, payload: UpdateMetaConnectionRequest): Observable<MetaConnection> {
     return this.baseApiService
       .put<
-        MetaConnection,
+        unknown,
         UpdateMetaConnectionRequest
       >(`${this.endpoint}/connections/${id}`, this.sanitizeConnectionPayload(payload))
-      .pipe(map(mapMetaConnectionDtoToViewModel));
+      .pipe(map((response) => mapMetaConnectionDtoToViewModel(normalizeMetaConnectionResponse(response))));
   }
 
   deleteConnection(id: string): Observable<void> {
@@ -121,4 +121,44 @@ export class MetaService {
       return sanitizedPayload;
     }, {} as T);
   }
+}
+
+type UnknownRecord = Record<string, unknown>;
+
+function normalizeMetaConnectionsResponse(response: unknown): MetaConnection[] {
+  if (Array.isArray(response)) {
+    return response.filter(isRecord).map(toMetaConnection);
+  }
+
+  if (!isRecord(response)) {
+    return [];
+  }
+
+  const wrappedCollection = ['data', 'result', 'value', 'payload', 'items']
+    .map((key) => response[key])
+    .find((candidate) => Array.isArray(candidate));
+
+  return Array.isArray(wrappedCollection)
+    ? wrappedCollection.filter(isRecord).map(toMetaConnection)
+    : [];
+}
+
+function normalizeMetaConnectionResponse(response: unknown): MetaConnection {
+  if (isRecord(response)) {
+    const wrappedConnection = ['data', 'result', 'value', 'payload']
+      .map((key) => response[key])
+      .find((candidate) => isRecord(candidate));
+
+    return isRecord(wrappedConnection) ? toMetaConnection(wrappedConnection) : toMetaConnection(response);
+  }
+
+  return { id: '' };
+}
+
+function isRecord(value: unknown): value is UnknownRecord {
+  return typeof value === 'object' && value !== null;
+}
+
+function toMetaConnection(source: UnknownRecord): MetaConnection {
+  return source as unknown as MetaConnection;
 }
