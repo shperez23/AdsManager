@@ -19,6 +19,7 @@ interface AuthSessionState {
 
 const AUTH_STORAGE_KEY = 'adsmanager.auth.session';
 const EXPIRY_LEEWAY_SECONDS = 30;
+const DEFAULT_SESSION_DURATION_MS = 60 * 60 * 1000;
 
 @Injectable({ providedIn: 'root' })
 export class AuthSessionService {
@@ -62,7 +63,10 @@ export class AuthSessionService {
     return this.authApi.register(payload).pipe(
       tap((tokens) => this.startSession(tokens)),
       switchMap(() => this.loadCurrentUser()),
-      map((user) => user ?? this.fallbackUserFromSession(payload.email, payload.name ?? payload.fullName)),
+      map(
+        (user) =>
+          user ?? this.fallbackUserFromSession(payload.email, payload.name ?? payload.fullName),
+      ),
     );
   }
 
@@ -227,8 +231,41 @@ export class AuthSessionService {
       return jwtExpiry;
     }
 
-    const expiresInMs = Math.max(0, Number(tokens.expiresIn || 0)) * 1000;
-    return Date.now() + expiresInMs;
+    const explicitExpiry =
+      this.extractTimestamp(tokens.expiresAt) ?? this.extractTimestamp(tokens.expiration);
+    if (explicitExpiry) {
+      return explicitExpiry;
+    }
+
+    const expiresInSeconds = Number(tokens.expiresIn ?? 0);
+    if (Number.isFinite(expiresInSeconds) && expiresInSeconds > 0) {
+      return Date.now() + expiresInSeconds * 1000;
+    }
+
+    return Date.now() + DEFAULT_SESSION_DURATION_MS;
+  }
+
+  private extractTimestamp(value: string | number | null | undefined): number | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    if (typeof value === 'number') {
+      return value > 1_000_000_000_000 ? value : value * 1000;
+    }
+
+    const trimmedValue = value.trim();
+    if (!trimmedValue) {
+      return null;
+    }
+
+    const numericValue = Number(trimmedValue);
+    if (Number.isFinite(numericValue) && numericValue > 0) {
+      return numericValue > 1_000_000_000_000 ? numericValue : numericValue * 1000;
+    }
+
+    const parsedDate = Date.parse(trimmedValue);
+    return Number.isNaN(parsedDate) ? null : parsedDate;
   }
 
   private extractJwtExpiry(accessToken: string): number | null {
