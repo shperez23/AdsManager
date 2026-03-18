@@ -1,67 +1,150 @@
 <div class="space-y-4">
   <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-    <h2 class="mb-4 text-lg font-semibold text-slate-900">{{ selectedAdSet ? 'Editar ad set' : 'Crear ad set' }}</h2>
+    <div class="mb-4 flex items-center justify-between gap-3">
+      <h2 class="text-lg font-semibold text-slate-900">
+        {{ isEditMode ? 'Editar ad set' : 'Crear ad set' }}
+      </h2>
+      <button
+        *ngIf="isEditMode"
+        type="button"
+        class="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700"
+        (click)="onCancelEdit()"
+        [disabled]="isSubmitting || isLoadingAdSet"
+      >
+        Cancelar
+      </button>
+    </div>
+
+    <p *ngIf="isLoadingAdSet" class="mb-4 text-sm text-slate-500">
+      Cargando detalles del ad set...
+    </p>
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="grid gap-3 sm:grid-cols-2">
       <label class="flex flex-col gap-1 text-xs font-medium text-slate-700">
         Campaign ID
-        <input formControlName="campaignId" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal" placeholder="Campaign ID" [readonly]="!!selectedAdSet" />
+        <input
+          formControlName="campaignId"
+          class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal"
+          placeholder="Campaign ID"
+          [readonly]="isEditMode"
+        />
+        <span *ngIf="hasError('campaignId', 'required')" class="text-xs text-rose-600"
+          >Ingresa el Campaign ID.</span
+        >
       </label>
 
       <label class="flex flex-col gap-1 text-xs font-medium text-slate-700">
         Estado
-        <select formControlName="status" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal">
-          <option value="ACTIVE">ACTIVE</option>
-          <option value="PAUSED">PAUSED</option>
-          <option value="DISABLED">DISABLED</option>
+        <select
+          formControlName="status"
+          class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal"
+        >
+          <option *ngFor="let statusOption of statusOptions" [value]="statusOption">
+            {{ statusOption }}
+          </option>
         </select>
       </label>
 
       <label class="flex flex-col gap-1 text-xs font-medium text-slate-700 sm:col-span-2">
         Nombre
-        <input formControlName="name" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal" placeholder="Nombre" />
+        <input
+          formControlName="name"
+          class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal"
+          placeholder="Nombre"
+        />
+        <span *ngIf="hasError('name', 'required')" class="text-xs text-rose-600"
+          >Ingresa el nombre del ad set.</span
+        >
+        <span *ngIf="hasError('name', 'maxlength')" class="text-xs text-rose-600"
+          >El nombre no puede superar los 120 caracteres.</span
+        >
       </label>
 
       <label class="flex flex-col gap-1 text-xs font-medium text-slate-700">
-        {{ selectedAdSet ? 'Budget' : 'Daily budget' }}
-        <input formControlName="dailyBudget" type="number" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal" />
+        Daily budget
+        <input
+          formControlName="dailyBudget"
+          type="number"
+          class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal"
+          placeholder="0"
+        />
+        <span *ngIf="hasError('dailyBudget', 'min')" class="text-xs text-rose-600"
+          >Ingresa un presupuesto válido.</span
+        >
       </label>
 
       <label class="flex flex-col gap-1 text-xs font-medium text-slate-700">
         Billing event
-        <input formControlName="billingEvent" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal" placeholder="IMPRESSIONS" />
+        <input
+          formControlName="billingEvent"
+          class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal"
+          placeholder="IMPRESSIONS"
+        />
+        <span *ngIf="hasError('billingEvent', 'maxlength')" class="text-xs text-rose-600"
+          >El billing event no puede superar los 120 caracteres.</span
+        >
       </label>
 
       <label class="flex flex-col gap-1 text-xs font-medium text-slate-700">
         Optimization goal
-        <input formControlName="optimizationGoal" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal" placeholder="REACH" />
+        <input
+          formControlName="optimizationGoal"
+          class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal"
+          placeholder="REACH"
+        />
+        <span *ngIf="hasError('optimizationGoal', 'maxlength')" class="text-xs text-rose-600"
+          >El optimization goal no puede superar los 120 caracteres.</span
+        >
       </label>
 
       <label class="flex flex-col gap-1 text-xs font-medium text-slate-700">
         Bid strategy
-        <input formControlName="bidStrategy" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal" placeholder="LOWEST_COST" />
+        <input
+          formControlName="bidStrategy"
+          class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal"
+          placeholder="LOWEST_COST"
+        />
+        <span *ngIf="hasError('bidStrategy', 'maxlength')" class="text-xs text-rose-600"
+          >La bid strategy no puede superar los 120 caracteres.</span
+        >
       </label>
 
       <label class="flex flex-col gap-1 text-xs font-medium text-slate-700 sm:col-span-2">
         Targeting JSON
-        <textarea formControlName="targetingJson" rows="3" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal" placeholder='{"geo_locations": {}}'></textarea>
+        <textarea
+          formControlName="targetingJson"
+          rows="3"
+          class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal"
+          placeholder='{"geo_locations": {}}'
+        ></textarea>
       </label>
 
-      <ng-container *ngIf="selectedAdSet">
+      <ng-container *ngIf="isEditMode">
         <label class="flex flex-col gap-1 text-xs font-medium text-slate-700">
           Start date
-          <input formControlName="startDate" type="datetime-local" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal" />
+          <input
+            formControlName="startDate"
+            type="datetime-local"
+            class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal"
+          />
         </label>
 
         <label class="flex flex-col gap-1 text-xs font-medium text-slate-700">
           End date
-          <input formControlName="endDate" type="datetime-local" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal" />
+          <input
+            formControlName="endDate"
+            type="datetime-local"
+            class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal"
+          />
         </label>
       </ng-container>
 
-      <div class="sm:col-span-2">
-        <button class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-60" [disabled]="isSubmitting">
-          {{ isSubmitting ? 'Guardando...' : selectedAdSet ? 'Actualizar' : 'Crear' }}
+      <div class="flex gap-2 sm:col-span-2">
+        <button
+          class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+          [disabled]="isSubmitting || isLoadingAdSet"
+        >
+          {{ isSubmitting ? 'Guardando...' : isEditMode ? 'Actualizar' : 'Crear' }}
         </button>
       </div>
     </form>

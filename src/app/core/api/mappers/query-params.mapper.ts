@@ -17,11 +17,15 @@ export type ResourceQueryParams =
   | CampaignsQueryParams
   | RulesQueryParams;
 
-export function mapPaginationQueryParams(params?: PaginationQueryParams): PaginationQueryParams | undefined {
+export function mapPaginationQueryParams(
+  params?: PaginationQueryParams,
+): PaginationQueryParams | undefined {
   return compactQueryParams(params);
 }
 
-export function mapAdAccountsQueryParams(params?: AdAccountsQueryParams): AdAccountsQueryParams | undefined {
+export function mapAdAccountsQueryParams(
+  params?: AdAccountsQueryParams,
+): AdAccountsQueryParams | undefined {
   return compactQueryParams(params);
 }
 
@@ -29,8 +33,24 @@ export function mapAdsQueryParams(params?: AdsQueryParams): AdsQueryParams | und
   return compactQueryParams(params);
 }
 
-export function mapAdSetsQueryParams(params?: AdSetsQueryParams): AdSetsQueryParams | undefined {
-  return compactQueryParams(params);
+export function mapAdSetsQueryParams(
+  params?: AdSetsQueryParams,
+): Record<string, string | number | boolean> | undefined {
+  if (!params) {
+    return undefined;
+  }
+
+  const nextParams: Record<string, string | number | boolean | undefined> = {
+    Status: params.Status,
+    CampaignId: params.CampaignId,
+    Page: params.Page,
+    PageSize: params.PageSize,
+    Search: params.Search,
+    SortBy: params.SortBy,
+    SortDirection: params.SortDirection,
+  };
+
+  return compactQueryParams(nextParams) as Record<string, string | number | boolean> | undefined;
 }
 
 export function mapCampaignsQueryParams(
@@ -57,7 +77,9 @@ export function mapRulesQueryParams(params?: RulesQueryParams): RulesQueryParams
   return compactQueryParams(params);
 }
 
-export function mapDashboardQueryParams(params?: DashboardQueryParams): DashboardQueryParams | undefined {
+export function mapDashboardQueryParams(
+  params?: DashboardQueryParams,
+): DashboardQueryParams | undefined {
   return compactQueryParams(params);
 }
 
@@ -88,7 +110,9 @@ function compactQueryParams<T extends object>(params?: T): T | undefined {
     return undefined;
   }
 
-  const nextEntries = Object.entries(params).filter(([, value]) => value !== null && value !== undefined && value !== '');
+  const nextEntries = Object.entries(params).filter(
+    ([, value]) => value !== null && value !== undefined && value !== '',
+  );
 
   if (!nextEntries.length) {
     return undefined;
