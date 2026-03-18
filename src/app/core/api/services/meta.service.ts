@@ -52,8 +52,10 @@ export class MetaService {
   }
 
   getMetaCampaigns(adAccountId: string): Observable<MetaCampaign[]> {
+    const normalizedAdAccountId = normalizeMetaAdAccountId(adAccountId);
+
     return this.baseApiService
-      .get<unknown>(`${this.endpoint}/ad-accounts/${adAccountId}/campaigns`)
+      .get<unknown>(`${this.endpoint}/ad-accounts/${normalizedAdAccountId}/campaigns`)
       .pipe(map((response) => normalizeCollection(response).map(mapMetaCampaignDtoToViewModel)));
   }
 
@@ -61,11 +63,13 @@ export class MetaService {
     adAccountId: string,
     payload: MetaCampaignCreateRequest,
   ): Observable<MetaCampaign> {
+    const normalizedAdAccountId = normalizeMetaAdAccountId(adAccountId);
+
     return this.baseApiService
       .post<
         unknown,
         MetaCampaignCreateRequest
-      >(`${this.endpoint}/ad-accounts/${adAccountId}/campaigns`, payload)
+      >(`${this.endpoint}/ad-accounts/${normalizedAdAccountId}/campaigns`, payload)
       .pipe(map((response) => mapMetaCampaignDtoToViewModel(normalizeEntity(response))));
   }
 
@@ -200,4 +204,8 @@ function isRecord(value: unknown): value is UnknownRecord {
 
 function toMetaConnection(source: UnknownRecord): MetaConnection {
   return source as unknown as MetaConnection;
+}
+
+function normalizeMetaAdAccountId(adAccountId: string): string {
+  return adAccountId.startsWith('act_') ? adAccountId.slice(4) : adAccountId;
 }

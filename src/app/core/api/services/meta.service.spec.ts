@@ -29,6 +29,49 @@ describe('MetaService', () => {
     httpMock.verify();
   });
 
+  it('should remove the act_ prefix when requesting Meta campaigns', () => {
+    let receivedCampaigns = 0;
+
+    service.getMetaCampaigns('act_354012118823245').subscribe((campaigns) => {
+      receivedCampaigns = campaigns.length;
+    });
+
+    const request = httpMock.expectOne(
+      'https://localhost:61570/api/v1/meta/ad-accounts/354012118823245/campaigns',
+    );
+
+    expect(request.request.method).toBe('GET');
+    request.flush([
+      { id: 'cmp-1', adAccountId: '354012118823245', name: 'Campaign 1', status: 'ACTIVE' },
+    ]);
+
+    expect(receivedCampaigns).toBe(1);
+  });
+
+  it('should remove the act_ prefix when creating Meta campaigns', () => {
+    const payload = { name: 'Campaign 1', status: 'ACTIVE' };
+    let createdCampaignId = '';
+
+    service.createMetaCampaign('act_354012118823245', payload).subscribe((campaign) => {
+      createdCampaignId = campaign.id;
+    });
+
+    const request = httpMock.expectOne(
+      'https://localhost:61570/api/v1/meta/ad-accounts/354012118823245/campaigns',
+    );
+
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual(payload);
+    request.flush({
+      id: 'cmp-1',
+      adAccountId: '354012118823245',
+      name: 'Campaign 1',
+      status: 'ACTIVE',
+    });
+
+    expect(createdCampaignId).toBe('cmp-1');
+  });
+
   it('should send swagger-aligned insights query parameters for Meta ad accounts', () => {
     let receivedRows = 0;
 
@@ -44,7 +87,9 @@ describe('MetaService', () => {
 
     expect(request.request.method).toBe('GET');
     request.flush({
-      rows: [{ dateStart: '2026-03-01', dateEnd: '2026-03-01', impressions: 10, clicks: 2, spend: 4.5 }],
+      rows: [
+        { dateStart: '2026-03-01', dateEnd: '2026-03-01', impressions: 10, clicks: 2, spend: 4.5 },
+      ],
     });
 
     expect(receivedRows).toBe(1);
