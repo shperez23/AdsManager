@@ -1,0 +1,27 @@
+<div class="space-y-4">
+  <div
+    *ngIf="successMessage"
+    class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+  >
+    {{ successMessage }}
+  </div>
+
+  <app-meta-connections-form
+    [connection]="selectedConnection"
+    [isSubmitting]="isSubmitting"
+    (cancelEdit)="onCancelEdit()"
+    (submitForm)="onSubmit($event)"
+  ></app-meta-connections-form>
+
+  <app-meta-connections-list
+    [connections]="connections"
+    [isLoading]="isLoading"
+    [errorMessage]="errorMessage"
+    [activeActionId]="activeActionId"
+    (retry)="onRetry()"
+    (edit)="onEdit($event)"
+    (remove)="onDelete($event)"
+    (validate)="onValidate($event)"
+    (refreshToken)="onRefreshToken($event)"
+  ></app-meta-connections-list>
+</div>

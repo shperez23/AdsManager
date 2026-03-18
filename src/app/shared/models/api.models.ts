@@ -180,25 +180,33 @@ export interface ProblemDetails {
 
 export interface MetaConnection {
   id: string;
-  provider: string;
-  accountName: string;
-  status: string;
+  appId?: string;
+  appSecret?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  tokenExpiration?: string;
+  businessId?: string;
+  status?: string;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface CreateMetaConnectionRequest {
-  provider: string;
-  accessToken: string;
+  appId?: string;
+  appSecret?: string;
+  accessToken?: string;
   refreshToken?: string;
-  expiresAt?: string;
+  tokenExpiration?: string;
+  businessId?: string;
 }
 
 export interface UpdateMetaConnectionRequest {
+  appId?: string;
+  appSecret?: string;
   accessToken?: string;
   refreshToken?: string;
-  expiresAt?: string;
-  status?: string;
+  tokenExpiration?: string;
+  businessId?: string;
 }
 
 export interface MetaCampaignCreateRequest {
