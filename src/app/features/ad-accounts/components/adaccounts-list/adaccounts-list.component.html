@@ -80,7 +80,11 @@
           </td>
         </tr>
 
-        <tr *ngFor="let adAccount of adAccounts; trackBy: trackByAdAccount" class="hover:bg-slate-50">
+        <tr
+          *ngFor="let adAccount of adAccounts; trackBy: trackByAdAccount"
+          class="hover:bg-slate-50"
+          [ngClass]="{ 'bg-blue-50/60': selectedAdAccountId === adAccount.id }"
+        >
           <td class="whitespace-nowrap px-4 py-3 text-slate-900">{{ adAccount.name }}</td>
           <td class="whitespace-nowrap px-4 py-3">
             <span
