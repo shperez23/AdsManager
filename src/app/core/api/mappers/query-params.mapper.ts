@@ -25,8 +25,21 @@ export function mapPaginationQueryParams(
 
 export function mapAdAccountsQueryParams(
   params?: AdAccountsQueryParams,
-): AdAccountsQueryParams | undefined {
-  return compactQueryParams(params);
+): Record<string, string | number | boolean> | undefined {
+  if (!params) {
+    return undefined;
+  }
+
+  const nextParams: Record<string, string | number | boolean | undefined> = {
+    Status: params.Status,
+    Page: params.Page,
+    PageSize: params.PageSize,
+    Search: params.Search,
+    SortBy: params.SortBy,
+    SortDirection: params.SortDirection,
+  };
+
+  return compactQueryParams(nextParams) as Record<string, string | number | boolean> | undefined;
 }
 
 export function mapAdsQueryParams(

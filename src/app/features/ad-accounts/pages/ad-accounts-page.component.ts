@@ -7,6 +7,7 @@ import { finalize } from 'rxjs';
 import { AdAccountsService } from '../../../core/api/services/adaccounts.service';
 import { RequestFeedbackService } from '../../../core/errors/request-feedback.service';
 import { ToastService } from '../../../core/notifications/toast.service';
+import { AdAccount } from '../../../shared/models';
 import { AdaccountDetailComponent } from '../components/adaccount-detail/adaccount-detail.component';
 import { AdaccountsListComponent } from '../components/adaccounts-list/adaccounts-list.component';
 
@@ -18,6 +19,7 @@ import { AdaccountsListComponent } from '../components/adaccounts-list/adaccount
 })
 export class AdAccountsPageComponent implements OnInit {
   selectedAdAccountId: string | null = null;
+  selectedAdAccount: AdAccount | null = null;
   isImporting = false;
   reloadKey = 0;
 
@@ -33,7 +35,15 @@ export class AdAccountsPageComponent implements OnInit {
   ngOnInit(): void {
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       this.selectedAdAccountId = params.get('id');
+
+      if (!this.selectedAdAccountId) {
+        this.selectedAdAccount = null;
+      }
     });
+  }
+
+  onSelectedAdAccountChange(adAccount: AdAccount | null): void {
+    this.selectedAdAccount = adAccount;
   }
 
   onImportFromMeta(): void {

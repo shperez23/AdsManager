@@ -1,5 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, Input, OnChanges, OnInit, SimpleChanges, inject } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges,
+  inject,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -7,7 +17,13 @@ import { debounceTime, finalize, Subject } from 'rxjs';
 
 import { AdAccountsService } from '../../../../core/api/services/adaccounts.service';
 import { RequestFeedbackService } from '../../../../core/errors/request-feedback.service';
-import { AdAccount, AdAccountsQueryParams, PaginatedResponse, SortDirection } from '../../../../shared/models';
+import { ToastService } from '../../../../core/notifications/toast.service';
+import {
+  AdAccount,
+  AdAccountsQueryParams,
+  PaginatedResponse,
+  SortDirection,
+} from '../../../../shared/models';
 import { EmptyStateComponent } from '../../../../shared/ui/states/empty-state.component';
 import { ErrorStateComponent } from '../../../../shared/ui/states/error-state.component';
 import { LoadingStateComponent } from '../../../../shared/ui/states/loading-state.component';
@@ -17,7 +33,13 @@ type SortColumn = 'name' | 'status' | 'createdAt';
 @Component({
   selector: 'app-adaccounts-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingStateComponent, EmptyStateComponent, ErrorStateComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    LoadingStateComponent,
+    EmptyStateComponent,
+    ErrorStateComponent,
+  ],
   templateUrl: './adaccounts-list.component.html',
 })
 export class AdaccountsListComponent implements OnInit, OnChanges {
@@ -41,6 +63,8 @@ export class AdaccountsListComponent implements OnInit, OnChanges {
   @Input() selectedAdAccountId: string | null = null;
   @Input() reloadKey = 0;
 
+  @Output() readonly selectedAdAccountChange = new EventEmitter<AdAccount | null>();
+
   private readonly destroyRef = inject(DestroyRef);
   private readonly searchChange$ = new Subject<string>();
 
@@ -48,6 +72,7 @@ export class AdaccountsListComponent implements OnInit, OnChanges {
     private readonly adAccountsService: AdAccountsService,
     private readonly requestFeedbackService: RequestFeedbackService,
     private readonly router: Router,
+    private readonly toastService: ToastService,
   ) {}
 
   ngOnInit(): void {
@@ -58,6 +83,10 @@ export class AdaccountsListComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['reloadKey'] && !changes['reloadKey'].firstChange) {
       this.loadAdAccounts();
+    }
+
+    if (changes['selectedAdAccountId'] && !changes['selectedAdAccountId'].firstChange) {
+      this.emitSelectedAdAccount();
     }
   }
 
@@ -100,6 +129,10 @@ export class AdaccountsListComponent implements OnInit, OnChanges {
   }
 
   onSync(account: AdAccount): void {
+    if (this.syncingAccountId) {
+      return;
+    }
+
     this.syncingAccountId = account.id;
 
     this.adAccountsService
@@ -111,17 +144,25 @@ export class AdaccountsListComponent implements OnInit, OnChanges {
         }),
       )
       .subscribe({
-        next: () => this.loadAdAccounts(),
+        next: () => {
+          this.toastService.success({
+            title: 'Ad Accounts',
+            message: `Sincronización iniciada para ${account.name}.`,
+          });
+          this.loadAdAccounts();
+        },
         error: (error) => {
           this.errorMessage = this.requestFeedbackService.resolveMessage(
             error,
             'No se pudo sincronizar la cuenta. Intenta de nuevo.',
           );
+          this.toastService.error({ title: 'Ad Accounts', message: this.errorMessage });
         },
       });
   }
 
   onViewDetail(account: AdAccount): void {
+    this.selectedAdAccountChange.emit(account);
     this.router.navigate(['/ad-accounts'], { queryParams: { id: account.id } });
   }
 
@@ -146,11 +187,13 @@ export class AdaccountsListComponent implements OnInit, OnChanges {
   }
 
   private listenToSearch(): void {
-    this.searchChange$.pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef)).subscribe((term) => {
-      this.searchTerm = term;
-      this.currentPage = 1;
-      this.loadAdAccounts();
-    });
+    this.searchChange$
+      .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
+      .subscribe((term) => {
+        this.searchTerm = term;
+        this.currentPage = 1;
+        this.loadAdAccounts();
+      });
   }
 
   private loadAdAccounts(): void {
@@ -180,6 +223,7 @@ export class AdaccountsListComponent implements OnInit, OnChanges {
           this.currentPage = response.page;
           this.totalPages = Math.max(response.totalPages, 1);
           this.totalItems = response.totalItems;
+          this.emitSelectedAdAccount();
         },
         error: (error) => {
           this.errorMessage = this.requestFeedbackService.resolveMessage(
@@ -189,7 +233,19 @@ export class AdaccountsListComponent implements OnInit, OnChanges {
           this.adAccounts = [];
           this.totalItems = 0;
           this.totalPages = 1;
+          this.selectedAdAccountChange.emit(null);
         },
       });
+  }
+
+  private emitSelectedAdAccount(): void {
+    if (!this.selectedAdAccountId) {
+      this.selectedAdAccountChange.emit(null);
+      return;
+    }
+
+    const selectedAdAccount =
+      this.adAccounts.find((item) => item.id === this.selectedAdAccountId) ?? null;
+    this.selectedAdAccountChange.emit(selectedAdAccount);
   }
 }
