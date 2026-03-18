@@ -1,15 +1,20 @@
 <div class="space-y-6">
+  <app-reports-dashboard-section></app-reports-dashboard-section>
+
   <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
     <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
       <div class="space-y-2">
-        <div class="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-indigo-700">
+        <div
+          class="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-indigo-700"
+        >
           Reports
         </div>
         <div>
           <h2 class="text-2xl font-semibold text-slate-900">Insights report</h2>
           <p class="mt-1 max-w-3xl text-sm text-slate-600">
-            Consolida resultados de <code>/reports/insights</code> con filtros avanzados, rango consistente de
-            <span class="font-medium text-slate-800">dateFrom/dateTo</span>, tabla y paginación según la respuesta de la API.
+            Consolida resultados de <code>/reports/insights</code> con filtros avanzados, rango
+            consistente de <span class="font-medium text-slate-800">dateFrom/dateTo</span>, tabla y
+            paginación según la respuesta de la API.
           </p>
         </div>
       </div>
@@ -18,12 +23,22 @@
         <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
           <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Registros</p>
           <p class="mt-2 text-2xl font-semibold text-slate-900">{{ report.totalItems }}</p>
-          <p class="mt-1 text-xs text-slate-500">Página {{ report.page }} de {{ report.totalPages }}</p>
+          <p class="mt-1 text-xs text-slate-500">
+            Página {{ report.page }} de {{ report.totalPages }}
+          </p>
         </div>
         <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
           <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Exportación</p>
-          <p class="mt-2 text-sm font-medium text-slate-900">{{ exportSupported ? 'Disponible' : 'No disponible' }}</p>
-          <p class="mt-1 text-xs text-slate-500">{{ exportSupported ? 'La API expone exportación para este reporte.' : 'El swagger actual no expone un endpoint de export.' }}</p>
+          <p class="mt-2 text-sm font-medium text-slate-900">
+            {{ exportSupported ? 'Disponible' : 'No disponible' }}
+          </p>
+          <p class="mt-1 text-xs text-slate-500">
+            {{
+              exportSupported
+                ? 'La API expone exportación para este reporte.'
+                : 'El swagger actual no expone un endpoint de export.'
+            }}
+          </p>
         </div>
       </div>
     </div>
@@ -33,10 +48,13 @@
     <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h3 class="text-lg font-semibold text-slate-900">Filtros avanzados</h3>
-        <p class="text-sm text-slate-600">Refina por fecha, búsqueda, cuenta, campaign, orden y tamaño de página.</p>
+        <p class="text-sm text-slate-600">
+          Refina por fecha, búsqueda, cuenta, campaign, orden y tamaño de página.
+        </p>
       </div>
       <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
-        Parámetros soportados por swagger: CampaignId, AdAccountId, DateFrom, DateTo, Page, PageSize, Search, SortBy y SortDirection.
+        Parámetros soportados por swagger: CampaignId, AdAccountId, DateFrom, DateTo, Page,
+        PageSize, Search, SortBy y SortDirection.
       </div>
     </div>
 
@@ -87,7 +105,9 @@
           (ngModelChange)="onPageSizeChange($event)"
           class="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
         >
-          <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }} resultados</option>
+          <option *ngFor="let size of pageSizeOptions" [ngValue]="size">
+            {{ size }} resultados
+          </option>
         </select>
       </label>
 
@@ -99,7 +119,9 @@
           class="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
         >
           <option value="">Todas las cuentas</option>
-          <option *ngFor="let account of adAccounts" [value]="account.id">{{ account.name }}</option>
+          <option *ngFor="let account of adAccounts" [value]="account.id">
+            {{ account.name }}
+          </option>
         </select>
       </label>
 
@@ -110,7 +132,9 @@
           class="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
         >
           <option value="">Todas las campaigns</option>
-          <option *ngFor="let campaign of campaigns" [value]="campaign.id">{{ campaign.name }}</option>
+          <option *ngFor="let campaign of campaigns" [value]="campaign.id">
+            {{ campaign.name }}
+          </option>
         </select>
       </label>
 
@@ -120,7 +144,9 @@
           [(ngModel)]="sortBy"
           class="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
         >
-          <option *ngFor="let option of sortOptions" [value]="option.value">{{ option.label }}</option>
+          <option *ngFor="let option of sortOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
         </select>
       </label>
 
@@ -130,7 +156,9 @@
           [(ngModel)]="sortDirection"
           class="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
         >
-          <option *ngFor="let option of sortDirectionOptions" [ngValue]="option.value">{{ option.label }}</option>
+          <option *ngFor="let option of sortDirectionOptions" [ngValue]="option.value">
+            {{ option.label }}
+          </option>
         </select>
       </label>
     </div>
@@ -150,14 +178,18 @@
       >
         Limpiar filtros
       </button>
-      <span *ngIf="isLoadingFilters" class="text-xs text-slate-500">Actualizando opciones de filtros…</span>
+      <span *ngIf="isLoadingFilters" class="text-xs text-slate-500"
+        >Actualizando opciones de filtros…</span
+      >
     </div>
   </section>
 
   <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
     <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
       <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Impresiones</p>
-      <p class="mt-3 text-3xl font-semibold text-slate-900">{{ totalImpressions | number: '1.0-0' }}</p>
+      <p class="mt-3 text-3xl font-semibold text-slate-900">
+        {{ totalImpressions | number: '1.0-0' }}
+      </p>
     </article>
     <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
       <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Clicks</p>
@@ -165,12 +197,18 @@
     </article>
     <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
       <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Spend</p>
-      <p class="mt-3 text-3xl font-semibold text-slate-900">{{ totalSpend | currency: currencyCode : 'symbol' : '1.2-2' }}</p>
+      <p class="mt-3 text-3xl font-semibold text-slate-900">
+        {{ totalSpend | currency: currencyCode : 'symbol' : '1.2-2' }}
+      </p>
     </article>
     <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
       <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">CTR promedio</p>
-      <p class="mt-3 text-3xl font-semibold text-slate-900">{{ averageCtr / 100 | percent: '1.2-2' }}</p>
-      <p class="mt-1 text-xs text-slate-500">CPC promedio: {{ averageCpc | currency: currencyCode : 'symbol' : '1.2-2' }}</p>
+      <p class="mt-3 text-3xl font-semibold text-slate-900">
+        {{ averageCtr / 100 | percent: '1.2-2' }}
+      </p>
+      <p class="mt-1 text-xs text-slate-500">
+        CPC promedio: {{ averageCpc | currency: currencyCode : 'symbol' : '1.2-2' }}
+      </p>
     </article>
   </section>
 
@@ -178,7 +216,9 @@
     <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h3 class="text-lg font-semibold text-slate-900">Resultados</h3>
-        <p class="text-sm text-slate-600">Tabla de métricas agregadas devueltas por el endpoint de reports.</p>
+        <p class="text-sm text-slate-600">
+          Tabla de métricas agregadas devueltas por el endpoint de reports.
+        </p>
       </div>
       <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
         Moneda de respuesta: {{ currencyCode }}
@@ -209,14 +249,30 @@
 
           <ng-container *ngIf="!isLoadingReport">
             <tr *ngFor="let row of rows; trackBy: trackByRow" class="hover:bg-slate-50/80">
-              <td class="whitespace-nowrap px-4 py-3 text-slate-700">{{ row.dateStart }} → {{ row.dateEnd }}</td>
-              <td class="whitespace-nowrap px-4 py-3 text-slate-700">{{ row.impressions | number: '1.0-0' }}</td>
-              <td class="whitespace-nowrap px-4 py-3 text-slate-700">{{ row.clicks | number: '1.0-0' }}</td>
-              <td class="whitespace-nowrap px-4 py-3 text-slate-700">{{ ((row.ctr ?? 0) / 100) | percent: '1.2-2' }}</td>
-              <td class="whitespace-nowrap px-4 py-3 text-slate-700">{{ (row.cpc ?? 0) | currency: currencyCode : 'symbol' : '1.2-2' }}</td>
-              <td class="whitespace-nowrap px-4 py-3 text-slate-700">{{ (row.cpm ?? 0) | currency: currencyCode : 'symbol' : '1.2-2' }}</td>
-              <td class="whitespace-nowrap px-4 py-3 text-slate-700">{{ (row.reach ?? 0) | number: '1.0-0' }}</td>
-              <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-900">{{ row.spend | currency: currencyCode : 'symbol' : '1.2-2' }}</td>
+              <td class="whitespace-nowrap px-4 py-3 text-slate-700">
+                {{ row.dateStart }} → {{ row.dateEnd }}
+              </td>
+              <td class="whitespace-nowrap px-4 py-3 text-slate-700">
+                {{ row.impressions | number: '1.0-0' }}
+              </td>
+              <td class="whitespace-nowrap px-4 py-3 text-slate-700">
+                {{ row.clicks | number: '1.0-0' }}
+              </td>
+              <td class="whitespace-nowrap px-4 py-3 text-slate-700">
+                {{ (row.ctr ?? 0) / 100 | percent: '1.2-2' }}
+              </td>
+              <td class="whitespace-nowrap px-4 py-3 text-slate-700">
+                {{ row.cpc ?? 0 | currency: currencyCode : 'symbol' : '1.2-2' }}
+              </td>
+              <td class="whitespace-nowrap px-4 py-3 text-slate-700">
+                {{ row.cpm ?? 0 | currency: currencyCode : 'symbol' : '1.2-2' }}
+              </td>
+              <td class="whitespace-nowrap px-4 py-3 text-slate-700">
+                {{ row.reach ?? 0 | number: '1.0-0' }}
+              </td>
+              <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-900">
+                {{ row.spend | currency: currencyCode : 'symbol' : '1.2-2' }}
+              </td>
             </tr>
 
             <tr *ngIf="!rows.length">
@@ -232,9 +288,13 @@
       </table>
     </div>
 
-    <div *ngIf="shouldShowPagination" class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div
+      *ngIf="shouldShowPagination"
+      class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+    >
       <p class="text-sm text-slate-500">
-        Mostrando página {{ report.page }} de {{ report.totalPages }} · {{ report.totalItems }} registros
+        Mostrando página {{ report.page }} de {{ report.totalPages }} ·
+        {{ report.totalItems }} registros
       </p>
 
       <div class="flex flex-wrap items-center gap-2">
@@ -251,7 +311,11 @@
           *ngFor="let pageNumber of pageNumbers"
           type="button"
           class="rounded-xl px-3 py-2 text-xs font-semibold transition"
-          [ngClass]="pageNumber === report.page ? 'bg-indigo-600 text-white shadow-sm' : 'border border-slate-300 text-slate-700 hover:bg-slate-50'"
+          [ngClass]="
+            pageNumber === report.page
+              ? 'bg-indigo-600 text-white shadow-sm'
+              : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
+          "
           (click)="onPageChange(pageNumber)"
         >
           {{ pageNumber }}

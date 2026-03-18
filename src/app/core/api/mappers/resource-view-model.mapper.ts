@@ -7,6 +7,9 @@ import {
   InsightMetrics,
   InsightsReportResponse,
   InsightsResponse,
+  MetaAd,
+  MetaAdSet,
+  MetaCampaign,
   MetaConnection,
   PaginatedResponse,
   Rule,
@@ -75,10 +78,57 @@ export function mapInsightsResponseDtoToViewModel(dto: InsightsResponse): Insigh
   };
 }
 
-export function mapInsightsReportResponseDtoToViewModel(dto: InsightsReportResponse): InsightsReportResponse {
+export function mapInsightsReportResponseDtoToViewModel(
+  dto: InsightsReportResponse,
+): InsightsReportResponse {
   return {
     ...dto,
     rows: (dto.rows ?? []).map(mapInsightMetricsDtoToViewModel),
+  };
+}
+
+export function mapMetaCampaignDtoToViewModel(dto: unknown): MetaCampaign {
+  const source = toRecord(dto);
+
+  return {
+    id: readString(source, 'id', 'Id') ?? '',
+    adAccountId: normalizeOptionalString(readUnknown(source, 'adAccountId', 'AdAccountId')),
+    name: readString(source, 'name', 'Name') ?? '',
+    status: normalizeOptionalString(readUnknown(source, 'status', 'Status')) ?? '',
+    objective: normalizeOptionalString(readUnknown(source, 'objective', 'Objective')),
+    dailyBudget: normalizeOptionalNumber(readNumber(source, 'dailyBudget', 'DailyBudget')),
+    lifetimeBudget: normalizeOptionalNumber(readNumber(source, 'lifetimeBudget', 'LifetimeBudget')),
+  };
+}
+
+export function mapMetaAdSetDtoToViewModel(dto: unknown): MetaAdSet {
+  const source = toRecord(dto);
+
+  return {
+    id: readString(source, 'id', 'Id') ?? '',
+    adAccountId: normalizeOptionalString(readUnknown(source, 'adAccountId', 'AdAccountId')),
+    campaignId: normalizeOptionalString(readUnknown(source, 'campaignId', 'CampaignId')),
+    name: readString(source, 'name', 'Name') ?? '',
+    status: normalizeOptionalString(readUnknown(source, 'status', 'Status')) ?? '',
+    dailyBudget: normalizeOptionalNumber(readNumber(source, 'dailyBudget', 'DailyBudget')),
+    billingEvent: normalizeOptionalString(readUnknown(source, 'billingEvent', 'BillingEvent')),
+    optimizationGoal: normalizeOptionalString(
+      readUnknown(source, 'optimizationGoal', 'OptimizationGoal'),
+    ),
+    targetingJson: normalizeOptionalString(readUnknown(source, 'targetingJson', 'TargetingJson')),
+  };
+}
+
+export function mapMetaAdDtoToViewModel(dto: unknown): MetaAd {
+  const source = toRecord(dto);
+
+  return {
+    id: readString(source, 'id', 'Id') ?? '',
+    adSetId: normalizeOptionalString(readUnknown(source, 'adSetId', 'AdSetId')),
+    name: readString(source, 'name', 'Name') ?? '',
+    status: normalizeOptionalString(readUnknown(source, 'status', 'Status')) ?? '',
+    creativeJson: normalizeOptionalString(readUnknown(source, 'creativeJson', 'CreativeJson')),
+    previewUrl: normalizeOptionalString(readUnknown(source, 'previewUrl', 'PreviewUrl')),
   };
 }
 
@@ -149,15 +199,28 @@ type UnknownRecord = Record<string, unknown>;
 function normalizePaginatedResponse<TDto>(response: unknown): PaginatedResponse<TDto> {
   const source = toRecord(response);
   const payload = resolveCollectionPayload(source);
-  const items = readArray(payload, 'items', 'Items', 'data', 'Data', 'result', 'Result', 'value', 'Value');
+  const items = readArray(
+    payload,
+    'items',
+    'Items',
+    'data',
+    'Data',
+    'result',
+    'Result',
+    'value',
+    'Value',
+  );
   const pageSize = Math.max(
     readNumber(payload, 'pageSize', 'PageSize', 'limit', 'Limit'),
     items.length || 10,
   );
   const page = Math.max(readNumber(payload, 'page', 'Page', 'currentPage', 'CurrentPage'), 1);
-  const totalItems = readNumber(payload, 'totalItems', 'TotalItems', 'total', 'Total', 'count', 'Count') || items.length;
+  const totalItems =
+    readNumber(payload, 'totalItems', 'TotalItems', 'total', 'Total', 'count', 'Count') ||
+    items.length;
   const totalPages = Math.max(
-    readNumber(payload, 'totalPages', 'TotalPages') || Math.ceil(totalItems / Math.max(pageSize, 1)),
+    readNumber(payload, 'totalPages', 'TotalPages') ||
+      Math.ceil(totalItems / Math.max(pageSize, 1)),
     1,
   );
 
@@ -179,7 +242,17 @@ function resolveCollectionPayload(source: UnknownRecord): UnknownRecord {
     return source;
   }
 
-  const candidateItems = readArray(candidate, 'items', 'Items', 'data', 'Data', 'result', 'Result', 'value', 'Value');
+  const candidateItems = readArray(
+    candidate,
+    'items',
+    'Items',
+    'data',
+    'Data',
+    'result',
+    'Result',
+    'value',
+    'Value',
+  );
 
   if (candidateItems.length > 0 || hasPaginationMetadata(candidate)) {
     return candidate;
