@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, finalize, map, of, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, finalize, map, of, tap } from 'rxjs';
 
 import {
   AuthTokensResponse,
@@ -54,18 +54,15 @@ export class AuthSessionService {
   login(payload: LoginRequest): Observable<AuthUser> {
     return this.authApi.login(payload).pipe(
       tap((tokens) => this.startSession(tokens)),
-      switchMap(() => this.loadCurrentUser()),
-      map((user) => user ?? this.fallbackUserFromSession(payload.email)),
+      map(() => this.hydrateUserAfterAuthentication(payload.email)),
     );
   }
 
   register(payload: RegisterRequest): Observable<AuthUser> {
     return this.authApi.register(payload).pipe(
       tap((tokens) => this.startSession(tokens)),
-      switchMap(() => this.loadCurrentUser()),
-      map(
-        (user) =>
-          user ?? this.fallbackUserFromSession(payload.email, payload.name ?? payload.fullName),
+      map(() =>
+        this.hydrateUserAfterAuthentication(payload.email, payload.name ?? payload.fullName),
       ),
     );
   }
@@ -138,6 +135,14 @@ export class AuthSessionService {
 
     const now = Date.now();
     return session.expiresAt > now + bufferSeconds * 1000;
+  }
+
+  private hydrateUserAfterAuthentication(email?: string, fullName?: string): AuthUser {
+    const fallbackUser = this.fallbackUserFromSession(email, fullName);
+
+    this.loadCurrentUser().subscribe();
+
+    return fallbackUser;
   }
 
   private fallbackUserFromSession(email?: string, fullName?: string): AuthUser {
