@@ -12,6 +12,7 @@ import { BaseApiService } from './base-api.service';
 export interface AuthUser {
   id: string;
   email: string;
+  name?: string;
   fullName?: string;
 }
 
