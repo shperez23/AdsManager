@@ -1,5 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, EventEmitter, OnInit, Output, inject } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges,
+  inject,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
@@ -14,7 +24,8 @@ import { Campaign, CampaignsQueryParams } from '../../../../shared/models';
   imports: [CommonModule, FormsModule],
   templateUrl: './campaigns-list.component.html',
 })
-export class CampaignsListComponent implements OnInit {
+export class CampaignsListComponent implements OnInit, OnChanges {
+  @Input() reloadKey = 0;
   @Output() editCampaign = new EventEmitter<Campaign>();
 
   campaigns: Campaign[] = [];
@@ -29,6 +40,12 @@ export class CampaignsListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCampaigns();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['reloadKey'] && !changes['reloadKey'].firstChange) {
+      this.loadCampaigns();
+    }
   }
 
   onEdit(campaign: Campaign): void {

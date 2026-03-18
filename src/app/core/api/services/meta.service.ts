@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 import {
   AdAccount,
@@ -12,6 +12,7 @@ import {
   MetaConnection,
   UpdateMetaConnectionRequest,
 } from '../../../shared/models';
+import { mapMetaConnectionDtoToViewModel } from '../mappers/resource-view-model.mapper';
 import { BaseApiService } from './base-api.service';
 
 @Injectable({ providedIn: 'root' })
@@ -54,15 +55,21 @@ export class MetaService {
   }
 
   getConnections(): Observable<MetaConnection[]> {
-    return this.baseApiService.get<MetaConnection[]>(`${this.endpoint}/connections`);
+    return this.baseApiService
+      .get<MetaConnection[]>(`${this.endpoint}/connections`)
+      .pipe(map((connections) => connections.map(mapMetaConnectionDtoToViewModel)));
   }
 
   createConnection(payload: CreateMetaConnectionRequest): Observable<MetaConnection> {
-    return this.baseApiService.post<MetaConnection, CreateMetaConnectionRequest>(`${this.endpoint}/connections`, payload);
+    return this.baseApiService
+      .post<MetaConnection, CreateMetaConnectionRequest>(`${this.endpoint}/connections`, payload)
+      .pipe(map(mapMetaConnectionDtoToViewModel));
   }
 
   updateConnection(id: string, payload: UpdateMetaConnectionRequest): Observable<MetaConnection> {
-    return this.baseApiService.put<MetaConnection, UpdateMetaConnectionRequest>(`${this.endpoint}/connections/${id}`, payload);
+    return this.baseApiService
+      .put<MetaConnection, UpdateMetaConnectionRequest>(`${this.endpoint}/connections/${id}`, payload)
+      .pipe(map(mapMetaConnectionDtoToViewModel));
   }
 
   deleteConnection(id: string): Observable<void> {

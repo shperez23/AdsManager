@@ -84,38 +84,35 @@ export class AdaccountDetailComponent implements OnChanges {
                 return of({ selectedAdAccount, campaigns, adSets: [], ads: [] });
               }
 
-              return forkJoin(
-                campaigns.map((campaign) =>
-                  this.adSetsService.getAdSets({
-                    Page: 1,
-                    PageSize: 100,
-                    CampaignId: campaign.id,
-                  }),
+              return forkJoin({
+                adSets: forkJoin(
+                  campaigns.map((campaign) =>
+                    this.adSetsService.getAdSets({
+                      Page: 1,
+                      PageSize: 100,
+                      CampaignId: campaign.id,
+                    }),
+                  ),
+                ).pipe(map((responses) => responses.flatMap((response) => response.items))),
+                ads: forkJoin(
+                  campaigns.map((campaign) =>
+                    this.adsService.getAds({
+                      Page: 1,
+                      PageSize: 100,
+                      CampaignId: campaign.id,
+                    }),
+                  ),
+                ).pipe(
+                  map((responses) => responses.flatMap((response) => response.items)),
+                  map((ads) => Array.from(new Map(ads.map((ad) => [ad.id, ad])).values())),
                 ),
-              ).pipe(
-                map((adSetResponses) => adSetResponses.flatMap((response) => response.items)),
-                switchMap((adSets) => {
-                  if (adSets.length === 0) {
-                    return of({ selectedAdAccount, campaigns, adSets, ads: [] });
-                  }
-
-                  return forkJoin(
-                    adSets.map((adSet) =>
-                      this.adsService.getAds({
-                        Page: 1,
-                        PageSize: 100,
-                        AdSetId: adSet.id,
-                      }),
-                    ),
-                  ).pipe(
-                    map((adsResponses) => ({
-                      selectedAdAccount,
-                      campaigns,
-                      adSets,
-                      ads: adsResponses.flatMap((response) => response.items),
-                    })),
-                  );
-                }),
+              }).pipe(
+                map(({ adSets, ads }) => ({
+                  selectedAdAccount,
+                  campaigns,
+                  adSets,
+                  ads,
+                })),
               );
             }),
           );
