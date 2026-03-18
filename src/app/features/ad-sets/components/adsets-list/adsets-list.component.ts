@@ -16,17 +16,37 @@ import { debounceTime, finalize, Subject } from 'rxjs';
 
 import { AdSetsService } from '../../../../core/api/services/adsets.service';
 import { RequestFeedbackService } from '../../../../core/errors/request-feedback.service';
-import { AdSet, AdSetsQueryParams, PaginatedResponse } from '../../../../shared/models';
+import {
+  SortDirection,
+  AdSet,
+  AdSetsQueryParams,
+  PaginatedResponse,
+} from '../../../../shared/models';
 import { EmptyStateComponent } from '../../../../shared/ui/states/empty-state.component';
 import { ErrorStateComponent } from '../../../../shared/ui/states/error-state.component';
 import { LoadingStateComponent } from '../../../../shared/ui/states/loading-state.component';
 
 type AdSetStatusFilter = 'ALL' | 'ACTIVE' | 'PAUSED' | 'DISABLED';
+type AdSetSortField =
+  | ''
+  | 'name'
+  | 'status'
+  | 'campaignId'
+  | 'dailyBudget'
+  | 'createdAt'
+  | 'updatedAt';
+type AdSetSortDirectionOption = '' | 'ASC' | 'DESC';
 
 @Component({
   selector: 'app-adsets-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingStateComponent, EmptyStateComponent, ErrorStateComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    LoadingStateComponent,
+    EmptyStateComponent,
+    ErrorStateComponent,
+  ],
   templateUrl: './adsets-list.component.html',
 })
 export class AdsetsListComponent implements OnInit, OnChanges {
@@ -35,10 +55,27 @@ export class AdsetsListComponent implements OnInit, OnChanges {
 
   readonly pageSizeOptions = [5, 10, 20, 50];
   readonly statusOptions: AdSetStatusFilter[] = ['ALL', 'ACTIVE', 'PAUSED', 'DISABLED'];
+  readonly sortFieldOptions: { value: AdSetSortField; label: string }[] = [
+    { value: '', label: 'Sin orden' },
+    { value: 'name', label: 'Nombre' },
+    { value: 'status', label: 'Estado' },
+    { value: 'campaignId', label: 'Campaign ID' },
+    { value: 'dailyBudget', label: 'Daily budget' },
+    { value: 'createdAt', label: 'Fecha de creación' },
+    { value: 'updatedAt', label: 'Fecha de actualización' },
+  ];
+  readonly sortDirectionOptions: { value: AdSetSortDirectionOption; label: string }[] = [
+    { value: '', label: 'Dirección' },
+    { value: 'ASC', label: 'Ascendente' },
+    { value: 'DESC', label: 'Descendente' },
+  ];
 
   adSets: AdSet[] = [];
   searchTerm = '';
+  campaignIdFilter = '';
   selectedStatus: AdSetStatusFilter = 'ALL';
+  selectedSortBy: AdSetSortField = '';
+  selectedSortDirection: AdSetSortDirectionOption = '';
   selectedPageSize = 10;
   currentPage = 1;
   totalPages = 1;
@@ -49,6 +86,7 @@ export class AdsetsListComponent implements OnInit, OnChanges {
 
   private readonly destroyRef = inject(DestroyRef);
   private readonly searchChange$ = new Subject<string>();
+  private readonly campaignIdChange$ = new Subject<string>();
 
   constructor(
     private readonly adSetsService: AdSetsService,
@@ -57,6 +95,7 @@ export class AdsetsListComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.listenToSearch();
+    this.listenToCampaignId();
     this.loadAdSets();
   }
 
@@ -70,8 +109,27 @@ export class AdsetsListComponent implements OnInit, OnChanges {
     this.searchChange$.next(value);
   }
 
+  onCampaignIdChange(value: string): void {
+    this.campaignIdChange$.next(value);
+  }
+
   onStatusChange(status: AdSetStatusFilter): void {
     this.selectedStatus = status;
+    this.currentPage = 1;
+    this.loadAdSets();
+  }
+
+  onSortByChange(sortBy: AdSetSortField): void {
+    this.selectedSortBy = sortBy;
+    if (!sortBy) {
+      this.selectedSortDirection = '';
+    }
+    this.currentPage = 1;
+    this.loadAdSets();
+  }
+
+  onSortDirectionChange(sortDirection: AdSetSortDirectionOption): void {
+    this.selectedSortDirection = sortDirection;
     this.currentPage = 1;
     this.loadAdSets();
   }
@@ -134,15 +192,27 @@ export class AdsetsListComponent implements OnInit, OnChanges {
   }
 
   getDisplayBudget(adSet: AdSet): number {
-    return adSet.budget ?? adSet.dailyBudget ?? 0;
+    return adSet.dailyBudget ?? adSet.budget ?? 0;
   }
 
   private listenToSearch(): void {
-    this.searchChange$.pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef)).subscribe((term) => {
-      this.searchTerm = term;
-      this.currentPage = 1;
-      this.loadAdSets();
-    });
+    this.searchChange$
+      .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
+      .subscribe((term) => {
+        this.searchTerm = term;
+        this.currentPage = 1;
+        this.loadAdSets();
+      });
+  }
+
+  private listenToCampaignId(): void {
+    this.campaignIdChange$
+      .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
+      .subscribe((campaignId) => {
+        this.campaignIdFilter = campaignId;
+        this.currentPage = 1;
+        this.loadAdSets();
+      });
   }
 
   private loadAdSets(): void {
@@ -154,6 +224,9 @@ export class AdsetsListComponent implements OnInit, OnChanges {
       PageSize: this.selectedPageSize,
       Search: this.searchTerm || undefined,
       Status: this.selectedStatus !== 'ALL' ? this.selectedStatus : undefined,
+      CampaignId: this.campaignIdFilter.trim() || undefined,
+      SortBy: this.selectedSortBy || undefined,
+      SortDirection: this.toSortDirection(this.selectedSortDirection),
     };
 
     this.adSetsService
@@ -181,5 +254,17 @@ export class AdsetsListComponent implements OnInit, OnChanges {
           this.totalPages = 1;
         },
       });
+  }
+
+  private toSortDirection(sortDirection: AdSetSortDirectionOption): SortDirection | undefined {
+    if (sortDirection === 'ASC') {
+      return SortDirection.Asc;
+    }
+
+    if (sortDirection === 'DESC') {
+      return SortDirection.Desc;
+    }
+
+    return undefined;
   }
 }

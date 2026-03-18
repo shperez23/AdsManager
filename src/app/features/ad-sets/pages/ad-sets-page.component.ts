@@ -10,6 +10,21 @@ import { ToastService } from '../../../core/notifications/toast.service';
 import { AdSet, CreateAdSetRequest, UpdateAdSetRequest } from '../../../shared/models';
 import { AdsetsListComponent } from '../components/adsets-list/adsets-list.component';
 
+type AdSetStatus = 'ACTIVE' | 'PAUSED' | 'DISABLED';
+
+type AdSetFormGroup = FormGroup<{
+  campaignId: FormControl<string>;
+  name: FormControl<string>;
+  status: FormControl<AdSetStatus>;
+  dailyBudget: FormControl<number | null>;
+  billingEvent: FormControl<string>;
+  optimizationGoal: FormControl<string>;
+  targetingJson: FormControl<string>;
+  bidStrategy: FormControl<string>;
+  startDate: FormControl<string>;
+  endDate: FormControl<string>;
+}>;
+
 @Component({
   selector: 'app-ad-sets-page',
   standalone: true,
@@ -19,17 +34,35 @@ import { AdsetsListComponent } from '../components/adsets-list/adsets-list.compo
 export class AdSetsPageComponent {
   selectedAdSet: AdSet | null = null;
   isSubmitting = false;
+  isLoadingAdSet = false;
   reloadKey = 0;
 
-  readonly form = new FormGroup({
+  readonly statusOptions: AdSetStatus[] = ['ACTIVE', 'PAUSED', 'DISABLED'];
+
+  readonly form: AdSetFormGroup = new FormGroup({
     campaignId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    name: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    status: new FormControl('ACTIVE', { nonNullable: true }),
-    dailyBudget: new FormControl(0, { nonNullable: true }),
-    billingEvent: new FormControl('', { nonNullable: true }),
-    optimizationGoal: new FormControl('', { nonNullable: true }),
+    name: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.maxLength(120)],
+    }),
+    status: new FormControl<AdSetStatus>('ACTIVE', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    dailyBudget: new FormControl<number | null>(null, { validators: [Validators.min(0)] }),
+    billingEvent: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(120)],
+    }),
+    optimizationGoal: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(120)],
+    }),
     targetingJson: new FormControl('', { nonNullable: true }),
-    bidStrategy: new FormControl('', { nonNullable: true }),
+    bidStrategy: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(120)],
+    }),
     startDate: new FormControl('', { nonNullable: true }),
     endDate: new FormControl('', { nonNullable: true }),
   });
@@ -42,29 +75,47 @@ export class AdSetsPageComponent {
     private readonly toastService: ToastService,
   ) {}
 
+  get isEditMode(): boolean {
+    return !!this.selectedAdSet;
+  }
+
   onEditAdSet(adSet: AdSet): void {
-    this.selectedAdSet = adSet;
-    this.form.reset({
-      campaignId: adSet.campaignId,
-      name: adSet.name,
-      status: adSet.status,
-      dailyBudget: adSet.budget ?? adSet.dailyBudget ?? 0,
-      billingEvent: adSet.billingEvent ?? '',
-      optimizationGoal: adSet.optimizationGoal ?? '',
-      targetingJson: adSet.targetingJson ?? '',
-      bidStrategy: adSet.bidStrategy ?? '',
-      startDate: this.toDateTimeLocal(adSet.startDate),
-      endDate: this.toDateTimeLocal(adSet.endDate),
-    });
+    this.isLoadingAdSet = true;
+
+    this.adSetsService
+      .getAdSetById(adSet.id)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => (this.isLoadingAdSet = false)),
+      )
+      .subscribe({
+        next: (adSetDetail) => {
+          this.selectedAdSet = adSetDetail;
+          this.form.reset(this.getFormValue(adSetDetail));
+        },
+        error: (error) => {
+          this.requestFeedbackService.showError(
+            'Ad Sets',
+            error,
+            'No se pudo cargar el ad set seleccionado.',
+          );
+        },
+      });
+  }
+
+  onCancelEdit(): void {
+    this.selectedAdSet = null;
+    this.form.reset(this.getInitialFormValue());
   }
 
   onSubmit(): void {
-    if (this.form.invalid || this.isSubmitting) {
+    if (this.form.invalid || this.isSubmitting || this.isLoadingAdSet) {
       this.form.markAllAsTouched();
       return;
     }
 
     this.isSubmitting = true;
+    const isEditMode = !!this.selectedAdSet;
     const value = this.form.getRawValue();
 
     const request$ = this.selectedAdSet
@@ -100,7 +151,12 @@ export class AdSetsPageComponent {
           this.selectedAdSet = null;
           this.reloadKey += 1;
           this.form.reset(this.getInitialFormValue());
-          this.toastService.success({ title: 'Ad Sets', message: 'Registro guardado correctamente.' });
+          this.toastService.success({
+            title: 'Ad Sets',
+            message: isEditMode
+              ? 'Ad set actualizado correctamente.'
+              : 'Ad set creado correctamente.',
+          });
         },
         error: (error) => {
           this.requestFeedbackService.showError('Ad Sets', error, 'No se pudo guardar el ad set.');
@@ -108,12 +164,17 @@ export class AdSetsPageComponent {
       });
   }
 
+  hasError(controlName: keyof AdSetFormGroup['controls'], errorCode: string): boolean {
+    const control = this.form.controls[controlName];
+    return !!control && control.touched && control.hasError(errorCode);
+  }
+
   private getInitialFormValue() {
     return {
       campaignId: '',
       name: '',
-      status: 'ACTIVE',
-      dailyBudget: 0,
+      status: 'ACTIVE' as AdSetStatus,
+      dailyBudget: null,
       billingEvent: '',
       optimizationGoal: '',
       targetingJson: '',
@@ -121,6 +182,25 @@ export class AdSetsPageComponent {
       startDate: '',
       endDate: '',
     };
+  }
+
+  private getFormValue(adSet: AdSet) {
+    return {
+      campaignId: adSet.campaignId,
+      name: adSet.name,
+      status: this.toAdSetStatus(adSet.status),
+      dailyBudget: adSet.budget ?? adSet.dailyBudget ?? null,
+      billingEvent: adSet.billingEvent ?? '',
+      optimizationGoal: adSet.optimizationGoal ?? '',
+      targetingJson: adSet.targetingJson ?? '',
+      bidStrategy: adSet.bidStrategy ?? '',
+      startDate: this.toDateTimeLocal(adSet.startDate),
+      endDate: this.toDateTimeLocal(adSet.endDate),
+    };
+  }
+
+  private toAdSetStatus(status?: string): AdSetStatus {
+    return status === 'PAUSED' || status === 'DISABLED' ? status : 'ACTIVE';
   }
 
   private toDateTimeLocal(value?: string): string {
@@ -141,8 +221,8 @@ export class AdSetsPageComponent {
     return trimmed.length > 0 ? trimmed : undefined;
   }
 
-  private asOptionalNumber(value: number): number | undefined {
-    return value > 0 ? value : undefined;
+  private asOptionalNumber(value: number | null): number | undefined {
+    return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
   }
 
   private asOptionalDate(value: string): string | undefined {

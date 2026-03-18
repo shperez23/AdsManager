@@ -2,13 +2,21 @@
   <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
     <h2 class="text-lg font-semibold text-slate-900">Ad Sets</h2>
 
-    <div class="grid gap-2 sm:grid-cols-3">
+    <div class="grid gap-2 md:grid-cols-2 xl:grid-cols-5">
       <input
         type="search"
         class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
         placeholder="Buscar por nombre"
         [ngModel]="searchTerm"
         (ngModelChange)="onSearchChange($event)"
+      />
+
+      <input
+        type="search"
+        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+        placeholder="Filtrar por Campaign ID"
+        [ngModel]="campaignIdFilter"
+        (ngModelChange)="onCampaignIdChange($event)"
       />
 
       <select
@@ -23,11 +31,34 @@
 
       <select
         class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-        [ngModel]="selectedPageSize"
-        (ngModelChange)="onPageSizeChange($event)"
+        [ngModel]="selectedSortBy"
+        (ngModelChange)="onSortByChange($event)"
       >
-        <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }} por página</option>
+        <option *ngFor="let sortField of sortFieldOptions" [value]="sortField.value">
+          {{ sortField.label }}
+        </option>
       </select>
+
+      <div class="grid grid-cols-2 gap-2">
+        <select
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+          [ngModel]="selectedSortDirection"
+          (ngModelChange)="onSortDirectionChange($event)"
+          [disabled]="!selectedSortBy"
+        >
+          <option *ngFor="let sortDirection of sortDirectionOptions" [value]="sortDirection.value">
+            {{ sortDirection.label }}
+          </option>
+        </select>
+
+        <select
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+          [ngModel]="selectedPageSize"
+          (ngModelChange)="onPageSizeChange($event)"
+        >
+          <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }} por página</option>
+        </select>
+      </div>
     </div>
   </div>
 
@@ -44,20 +75,24 @@
       <thead class="bg-slate-50">
         <tr>
           <th class="px-4 py-3 text-left font-semibold text-slate-700">Nombre</th>
-          <th class="px-4 py-3 text-left font-semibold text-slate-700">Status</th>
+          <th class="px-4 py-3 text-left font-semibold text-slate-700">Estado</th>
           <th class="px-4 py-3 text-left font-semibold text-slate-700">Campaign ID</th>
-          <th class="px-4 py-3 text-left font-semibold text-slate-700">Budget</th>
+          <th class="px-4 py-3 text-left font-semibold text-slate-700">Daily budget</th>
           <th class="px-4 py-3 text-left font-semibold text-slate-700">Acciones</th>
         </tr>
       </thead>
 
       <tbody class="divide-y divide-slate-200 bg-white">
         <tr *ngIf="isLoading">
-          <td colspan="5" class="px-4 py-6 text-center text-slate-500"><app-loading-state message="Cargando ad sets..."></app-loading-state></td>
+          <td colspan="5" class="px-4 py-6 text-center text-slate-500">
+            <app-loading-state message="Cargando ad sets..."></app-loading-state>
+          </td>
         </tr>
 
         <tr *ngIf="!isLoading && adSets.length === 0">
-          <td colspan="5" class="px-4 py-6 text-center text-slate-500"><app-empty-state></app-empty-state></td>
+          <td colspan="5" class="px-4 py-6 text-center text-slate-500">
+            <app-empty-state></app-empty-state>
+          </td>
         </tr>
 
         <tr *ngFor="let adSet of adSets; trackBy: trackByAdSet" class="hover:bg-slate-50">
@@ -68,7 +103,8 @@
               [ngClass]="{
                 'bg-emerald-100 text-emerald-700': adSet.status === 'ACTIVE',
                 'bg-amber-100 text-amber-700': adSet.status === 'PAUSED',
-                'bg-slate-200 text-slate-700': adSet.status !== 'ACTIVE' && adSet.status !== 'PAUSED'
+                'bg-slate-200 text-slate-700':
+                  adSet.status !== 'ACTIVE' && adSet.status !== 'PAUSED',
               }"
             >
               {{ adSet.status }}
@@ -86,7 +122,13 @@
                 [disabled]="actionAdSetId === adSet.id"
                 (click)="onToggleStatus(adSet)"
               >
-                {{ actionAdSetId === adSet.id ? 'Procesando...' : adSet.status === 'ACTIVE' ? 'Pausar' : 'Activar' }}
+                {{
+                  actionAdSetId === adSet.id
+                    ? 'Procesando...'
+                    : adSet.status === 'ACTIVE'
+                      ? 'Pausar'
+                      : 'Activar'
+                }}
               </button>
               <button
                 type="button"
