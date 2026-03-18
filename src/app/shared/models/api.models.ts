@@ -151,6 +151,9 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
+  tenantName?: string;
+  tenantSlug?: string;
+  name?: string;
   email: string;
   password: string;
   fullName?: string;
