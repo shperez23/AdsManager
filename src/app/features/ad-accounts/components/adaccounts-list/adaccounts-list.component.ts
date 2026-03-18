@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, Input, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, Input, OnChanges, OnInit, SimpleChanges, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -20,7 +20,7 @@ type SortColumn = 'name' | 'status' | 'createdAt';
   imports: [CommonModule, FormsModule, LoadingStateComponent, EmptyStateComponent, ErrorStateComponent],
   templateUrl: './adaccounts-list.component.html',
 })
-export class AdaccountsListComponent implements OnInit {
+export class AdaccountsListComponent implements OnInit, OnChanges {
   readonly pageSizeOptions = [5, 10, 20, 50];
   readonly statusOptions = ['ALL', 'ACTIVE', 'PAUSED', 'DISABLED'];
   readonly sortDirection = SortDirection;
@@ -39,6 +39,7 @@ export class AdaccountsListComponent implements OnInit {
   errorMessage: string | null = null;
 
   @Input() selectedAdAccountId: string | null = null;
+  @Input() reloadKey = 0;
 
   private readonly destroyRef = inject(DestroyRef);
   private readonly searchChange$ = new Subject<string>();
@@ -52,6 +53,12 @@ export class AdaccountsListComponent implements OnInit {
   ngOnInit(): void {
     this.listenToSearch();
     this.loadAdAccounts();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['reloadKey'] && !changes['reloadKey'].firstChange) {
+      this.loadAdAccounts();
+    }
   }
 
   onSearchChange(value: string): void {

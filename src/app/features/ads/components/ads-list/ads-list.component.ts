@@ -1,5 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, EventEmitter, OnInit, Output, inject } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges,
+  inject,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, finalize, Subject } from 'rxjs';
@@ -27,7 +37,8 @@ type AdStatusFilter = 'ALL' | 'ACTIVE' | 'PAUSED' | 'DISABLED';
   ],
   templateUrl: './ads-list.component.html',
 })
-export class AdsListComponent implements OnInit {
+export class AdsListComponent implements OnInit, OnChanges {
+  @Input() reloadKey = 0;
   @Output() editAd = new EventEmitter<Ad>();
 
   readonly pageSizeOptions = [5, 10, 20, 50];
@@ -55,6 +66,12 @@ export class AdsListComponent implements OnInit {
   ngOnInit(): void {
     this.listenToSearch();
     this.loadAds();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['reloadKey'] && !changes['reloadKey'].firstChange) {
+      this.loadAds();
+    }
   }
 
   onSearchChange(value: string): void {

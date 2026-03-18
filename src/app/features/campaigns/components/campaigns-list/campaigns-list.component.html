@@ -5,7 +5,13 @@
     <article *ngFor="let campaign of campaigns" class="flex items-center justify-between rounded-lg border border-slate-200 p-3">
       <div>
         <p class="text-sm font-medium text-slate-900">{{ campaign.name }}</p>
-        <p class="text-xs text-slate-500">{{ campaign.id }} · {{ campaign.status }}</p>
+        <p class="text-xs text-slate-500">
+          {{ campaign.id }} · {{ campaign.status }} · {{ campaign.objective || 'Sin objective' }}
+        </p>
+        <p class="text-xs text-slate-500">
+          Daily: {{ campaign.dailyBudget ?? 0 | currency: 'USD' : 'symbol' : '1.0-0' }} ·
+          Lifetime: {{ campaign.lifetimeBudget ?? 0 | currency: 'USD' : 'symbol' : '1.0-0' }}
+        </p>
       </div>
       <div class="flex gap-2">
         <button class="rounded-md border border-slate-300 px-3 py-1 text-xs" (click)="onEdit(campaign)">Editar</button>
