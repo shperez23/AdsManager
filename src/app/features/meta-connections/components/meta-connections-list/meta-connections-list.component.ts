@@ -24,7 +24,7 @@ export class MetaConnectionsListComponent {
   @Output() refreshToken = new EventEmitter<MetaConnection>();
   @Output() validate = new EventEmitter<MetaConnection>();
 
-  formatDate(value?: string): string {
+  formatDate(value?: string | null): string {
     if (!value) {
       return '—';
     }

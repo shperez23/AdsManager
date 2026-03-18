@@ -10,6 +10,7 @@ import {
   MetaCampaignCreateRequest,
   MetaCampaignStatusUpdateRequest,
   MetaConnection,
+  MetaConnectionMutationRequest,
   UpdateMetaConnectionRequest,
 } from '../../../shared/models';
 import { mapMetaConnectionDtoToViewModel } from '../mappers/resource-view-model.mapper';
@@ -25,14 +26,23 @@ export class MetaService {
     return this.baseApiService.get<AdAccount[]>(`${this.endpoint}/ad-accounts`);
   }
 
-  getMetaAdAccountInsights(adAccountId: string, dateFrom?: string, dateTo?: string): Observable<InsightsResponse> {
-    return this.baseApiService.get<InsightsResponse>(`${this.endpoint}/ad-accounts/${adAccountId}/insights`, {
-      params: { dateFrom, dateTo },
-    });
+  getMetaAdAccountInsights(
+    adAccountId: string,
+    dateFrom?: string,
+    dateTo?: string,
+  ): Observable<InsightsResponse> {
+    return this.baseApiService.get<InsightsResponse>(
+      `${this.endpoint}/ad-accounts/${adAccountId}/insights`,
+      {
+        params: { dateFrom, dateTo },
+      },
+    );
   }
 
   getMetaCampaigns(adAccountId: string): Observable<unknown[]> {
-    return this.baseApiService.get<unknown[]>(`${this.endpoint}/ad-accounts/${adAccountId}/campaigns`);
+    return this.baseApiService.get<unknown[]>(
+      `${this.endpoint}/ad-accounts/${adAccountId}/campaigns`,
+    );
   }
 
   createMetaCampaign(adAccountId: string, payload: MetaCampaignCreateRequest): Observable<unknown> {
@@ -43,11 +53,17 @@ export class MetaService {
   }
 
   updateMetaCampaignStatus(payload: MetaCampaignStatusUpdateRequest): Observable<void> {
-    return this.baseApiService.patch<void, MetaCampaignStatusUpdateRequest>(`${this.endpoint}/campaigns/status`, payload);
+    return this.baseApiService.patch<void, MetaCampaignStatusUpdateRequest>(
+      `${this.endpoint}/campaigns/status`,
+      payload,
+    );
   }
 
   createMetaAdSet(adAccountId: string, payload: MetaAdSetCreateRequest): Observable<unknown> {
-    return this.baseApiService.post<unknown, MetaAdSetCreateRequest>(`${this.endpoint}/ad-accounts/${adAccountId}/adsets`, payload);
+    return this.baseApiService.post<unknown, MetaAdSetCreateRequest>(
+      `${this.endpoint}/ad-accounts/${adAccountId}/adsets`,
+      payload,
+    );
   }
 
   createMetaAd(payload: MetaAdCreateRequest): Observable<unknown> {
@@ -62,13 +78,19 @@ export class MetaService {
 
   createConnection(payload: CreateMetaConnectionRequest): Observable<MetaConnection> {
     return this.baseApiService
-      .post<MetaConnection, CreateMetaConnectionRequest>(`${this.endpoint}/connections`, payload)
+      .post<
+        MetaConnection,
+        CreateMetaConnectionRequest
+      >(`${this.endpoint}/connections`, this.sanitizeConnectionPayload(payload))
       .pipe(map(mapMetaConnectionDtoToViewModel));
   }
 
   updateConnection(id: string, payload: UpdateMetaConnectionRequest): Observable<MetaConnection> {
     return this.baseApiService
-      .put<MetaConnection, UpdateMetaConnectionRequest>(`${this.endpoint}/connections/${id}`, payload)
+      .put<
+        MetaConnection,
+        UpdateMetaConnectionRequest
+      >(`${this.endpoint}/connections/${id}`, this.sanitizeConnectionPayload(payload))
       .pipe(map(mapMetaConnectionDtoToViewModel));
   }
 
@@ -77,10 +99,26 @@ export class MetaService {
   }
 
   refreshConnectionToken(id: string): Observable<void> {
-    return this.baseApiService.post<void, Record<string, never>>(`${this.endpoint}/connections/${id}/refresh-token`, {});
+    return this.baseApiService.post<void, Record<string, never>>(
+      `${this.endpoint}/connections/${id}/refresh-token`,
+      {},
+    );
   }
 
   validateConnection(id: string): Observable<void> {
-    return this.baseApiService.post<void, Record<string, never>>(`${this.endpoint}/connections/${id}/validate`, {});
+    return this.baseApiService.post<void, Record<string, never>>(
+      `${this.endpoint}/connections/${id}/validate`,
+      {},
+    );
+  }
+
+  private sanitizeConnectionPayload<T extends MetaConnectionMutationRequest>(payload: T): T {
+    return Object.entries(payload).reduce((sanitizedPayload, [key, value]) => {
+      if (value !== undefined) {
+        sanitizedPayload[key as keyof T] = value as T[keyof T];
+      }
+
+      return sanitizedPayload;
+    }, {} as T);
   }
 }
