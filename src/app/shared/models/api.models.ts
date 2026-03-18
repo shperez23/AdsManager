@@ -237,29 +237,72 @@ export interface MetaCampaignStatusUpdateRequest {
 }
 
 export enum RuleOperator {
-  GreaterThan = 'GreaterThan',
-  LessThan = 'LessThan',
-  Equal = 'Equal',
+  GreaterThan = 1,
+  LessThan = 2,
 }
 
 export enum RuleMetric {
-  Ctr = 'Ctr',
-  Cpc = 'Cpc',
-  Cpa = 'Cpa',
-  Roas = 'Roas',
-  Spend = 'Spend',
+  Ctr = 1,
+  Cpc = 2,
+  Cpa = 3,
 }
 
 export enum RuleEntityLevel {
-  Campaign = 'Campaign',
-  AdSet = 'AdSet',
-  Ad = 'Ad',
+  Campaign = 1,
+  AdSet = 2,
+  Ad = 3,
 }
 
-export interface RuleAction {
-  type: 'Pause' | 'Activate' | 'Notify';
-  value?: string;
+export enum RuleAction {
+  Pause = 1,
+  Activate = 2,
+  Notify = 3,
 }
+
+export const RULE_ENTITY_LEVEL_LABELS: Record<RuleEntityLevel, string> = {
+  [RuleEntityLevel.Campaign]: 'Campaign',
+  [RuleEntityLevel.AdSet]: 'Ad Set',
+  [RuleEntityLevel.Ad]: 'Ad',
+};
+
+export const RULE_METRIC_LABELS: Record<RuleMetric, string> = {
+  [RuleMetric.Ctr]: 'CTR',
+  [RuleMetric.Cpc]: 'CPC',
+  [RuleMetric.Cpa]: 'CPA',
+};
+
+export const RULE_OPERATOR_LABELS: Record<RuleOperator, string> = {
+  [RuleOperator.GreaterThan]: 'Mayor que',
+  [RuleOperator.LessThan]: 'Menor que',
+};
+
+export const RULE_ACTION_LABELS: Record<RuleAction, string> = {
+  [RuleAction.Pause]: 'Pause',
+  [RuleAction.Activate]: 'Activate',
+  [RuleAction.Notify]: 'Notify',
+};
+
+export const RULE_ENTITY_LEVEL_OPTIONS = Object.entries(RULE_ENTITY_LEVEL_LABELS).map(
+  ([value, label]) => ({
+    value: Number(value) as RuleEntityLevel,
+    label,
+  }),
+);
+
+export const RULE_METRIC_OPTIONS = Object.entries(RULE_METRIC_LABELS).map(([value, label]) => ({
+  value: Number(value) as RuleMetric,
+  label,
+}));
+
+export const RULE_OPERATOR_OPTIONS = Object.entries(RULE_OPERATOR_LABELS).map(([value, label]) => ({
+  value: Number(value) as RuleOperator,
+  label,
+}));
+
+export const RULE_ACTION_OPTIONS = Object.entries(RULE_ACTION_LABELS).map(([value, label]) => ({
+  value: Number(value) as RuleAction,
+  label,
+}));
 
 export interface Rule {
   id: string;
@@ -272,6 +315,15 @@ export interface Rule {
   isActive: boolean;
 }
 
+export interface RulesQueryParams {
+  Page?: number;
+  PageSize?: number;
+  Search?: string;
+  Status?: boolean;
+  SortBy?: string;
+  SortDirection?: SortDirection;
+}
+
 export interface CreateRuleRequest {
   name: string;
   entityLevel: RuleEntityLevel;
@@ -279,14 +331,17 @@ export interface CreateRuleRequest {
   operator: RuleOperator;
   threshold: number;
   action: RuleAction;
+  isActive: boolean;
 }
 
 export interface UpdateRuleRequest {
   name?: string;
+  entityLevel?: RuleEntityLevel;
   metric?: RuleMetric;
   operator?: RuleOperator;
   threshold?: number;
   action?: RuleAction;
+  isActive?: boolean;
 }
 
 export interface DashboardSummary {
