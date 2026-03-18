@@ -72,7 +72,7 @@ export class RegisterPageComponent {
         next: () => {
           this.toastService.success({
             title: 'Cuenta creada',
-            message: 'Registro exitoso. Ya puedes usar Ads Manager.',
+            message: 'Registro exitoso. Ya puedes usar la plataforma.',
           });
           this.router.navigateByUrl('/');
         },

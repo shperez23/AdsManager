@@ -69,13 +69,13 @@ export class CampaignsListComponent implements OnInit, OnChanges {
       .subscribe({
         next: () => {
           this.toastService.success({
-            title: 'Campaigns',
-            message: isActive ? 'Campaign pausada correctamente.' : 'Campaign activada correctamente.',
+            title: 'Campañas',
+            message: isActive ? 'Campaña pausada correctamente.' : 'Campaña activada correctamente.',
           });
           this.loadCampaigns();
         },
         error: (error) => {
-          this.requestFeedbackService.showError('Campaigns', error, 'No se pudo actualizar el estado de la campaign.');
+          this.requestFeedbackService.showError('Campañas', error, 'No se pudo actualizar el estado de la campaña.');
         },
       });
   }
@@ -97,7 +97,7 @@ export class CampaignsListComponent implements OnInit, OnChanges {
         },
         error: (error) => {
           this.campaigns = [];
-          this.requestFeedbackService.showError('Campaigns', error, 'No se pudieron cargar las campaigns.');
+          this.requestFeedbackService.showError('Campañas', error, 'No se pudieron cargar las campañas.');
         },
       });
   }

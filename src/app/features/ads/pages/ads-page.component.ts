@@ -61,9 +61,9 @@ export class AdsPageComponent implements OnInit {
         },
         error: (error) => {
           this.requestFeedbackService.showError(
-            'Ads',
+            'Anuncios',
             error,
-            'No se pudo cargar el detalle real del ad.',
+            'No se pudo cargar el detalle real del anuncio.',
           );
         },
       });
@@ -90,10 +90,10 @@ export class AdsPageComponent implements OnInit {
         next: () => {
           this.selectedAd = null;
           this.reloadKey += 1;
-          this.toastService.success({ title: 'Ads', message: 'Registro guardado correctamente.' });
+          this.toastService.success({ title: 'Anuncios', message: 'Registro guardado correctamente.' });
         },
         error: (error) => {
-          this.requestFeedbackService.showError('Ads', error, 'No se pudo guardar el ad.');
+          this.requestFeedbackService.showError('Anuncios', error, 'No se pudo guardar el anuncio.');
         },
       });
   }

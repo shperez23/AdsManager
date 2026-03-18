@@ -95,9 +95,9 @@ export class AdSetsPageComponent {
         },
         error: (error) => {
           this.requestFeedbackService.showError(
-            'Ad Sets',
+            'Conjuntos de anuncios',
             error,
-            'No se pudo cargar el ad set seleccionado.',
+            'No se pudo cargar el conjunto de anuncios seleccionado.',
           );
         },
       });
@@ -152,14 +152,14 @@ export class AdSetsPageComponent {
           this.reloadKey += 1;
           this.form.reset(this.getInitialFormValue());
           this.toastService.success({
-            title: 'Ad Sets',
+            title: 'Conjuntos de anuncios',
             message: isEditMode
-              ? 'Ad set actualizado correctamente.'
-              : 'Ad set creado correctamente.',
+              ? 'Conjunto de anuncios actualizado correctamente.'
+              : 'Conjunto de anuncios creado correctamente.',
           });
         },
         error: (error) => {
-          this.requestFeedbackService.showError('Ad Sets', error, 'No se pudo guardar el ad set.');
+          this.requestFeedbackService.showError('Conjuntos de anuncios', error, 'No se pudo guardar el conjunto de anuncios.');
         },
       });
   }

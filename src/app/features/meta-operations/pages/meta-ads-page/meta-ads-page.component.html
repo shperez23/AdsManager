@@ -7,7 +7,7 @@
     (ngSubmit)="onSubmit()"
   >
     <div class="mb-4">
-      <h3 class="text-lg font-semibold text-slate-900">Crear Meta ad</h3>
+      <h3 class="text-lg font-semibold text-slate-900">Crear anuncio de Meta</h3>
       <p class="text-sm text-slate-600">
         Usa <code>POST /meta/ads</code> y reemplaza el input manual de <code>adSetId</code> por
         selects enlazados a la API.
@@ -20,12 +20,12 @@
       [message]="errorMessage"
     ></app-error-state>
     <div *ngIf="isLoadingAccounts || isLoadingCampaigns || isLoadingAdSets" class="mb-4">
-      <app-loading-state message="Cargando selectores para creación de ads..."></app-loading-state>
+      <app-loading-state message="Cargando selectores para crear anuncios..."></app-loading-state>
     </div>
 
     <div class="grid gap-4 lg:grid-cols-2">
       <label class="block">
-        <span class="mb-1.5 block text-sm font-medium text-slate-700">Meta Ad Account</span>
+        <span class="mb-1.5 block text-sm font-medium text-slate-700">Cuenta publicitaria de Meta</span>
         <select
           formControlName="adAccountId"
           class="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm"
@@ -36,12 +36,12 @@
       </label>
 
       <label class="block">
-        <span class="mb-1.5 block text-sm font-medium text-slate-700">Campaign</span>
+        <span class="mb-1.5 block text-sm font-medium text-slate-700">Campaña</span>
         <select
           formControlName="campaignId"
           class="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm"
         >
-          <option value="">Selecciona una campaign</option>
+          <option value="">Selecciona una campaña</option>
           <option *ngFor="let campaign of campaigns" [value]="campaign.id">
             {{ campaign.name }}
           </option>
@@ -49,12 +49,12 @@
       </label>
 
       <label class="block lg:col-span-2">
-        <span class="mb-1.5 block text-sm font-medium text-slate-700">Ad Set</span>
+        <span class="mb-1.5 block text-sm font-medium text-slate-700">Conjunto de anuncios</span>
         <select
           formControlName="adSetId"
           class="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm"
         >
-          <option value="">Selecciona un ad set</option>
+          <option value="">Selecciona un conjunto de anuncios</option>
           <option *ngFor="let adSet of adSets" [value]="adSet.id">
             {{ adSet.name || adSet.id }}
           </option>
@@ -71,7 +71,7 @@
       </label>
 
       <label class="block">
-        <span class="mb-1.5 block text-sm font-medium text-slate-700">Status</span>
+        <span class="mb-1.5 block text-sm font-medium text-slate-700">Estado</span>
         <select
           formControlName="status"
           class="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm"
@@ -82,7 +82,7 @@
       </label>
 
       <label class="block lg:col-span-2">
-        <span class="mb-1.5 block text-sm font-medium text-slate-700">Creative JSON</span>
+        <span class="mb-1.5 block text-sm font-medium text-slate-700">JSON creativo</span>
         <textarea
           formControlName="creativeJson"
           rows="6"
@@ -98,7 +98,7 @@
         class="rounded-2xl bg-fuchsia-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-fuchsia-500 disabled:opacity-60"
         [disabled]="isSubmitting"
       >
-        {{ isSubmitting ? 'Creando...' : 'Crear ad' }}
+        {{ isSubmitting ? 'Creando...' : 'Crear anuncio' }}
       </button>
     </div>
   </form>

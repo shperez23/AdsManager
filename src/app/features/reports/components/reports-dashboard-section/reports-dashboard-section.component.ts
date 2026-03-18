@@ -191,7 +191,7 @@ export class ReportsDashboardSectionComponent implements OnInit {
         error: (error) => {
           this.errorMessage = this.requestFeedbackService.resolveMessage(
             error,
-            'No se pudo cargar el dashboard de reports.',
+            'No se pudo cargar el panel de reportes.',
           );
           this.summary = null;
         },

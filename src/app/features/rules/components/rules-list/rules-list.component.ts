@@ -141,7 +141,7 @@ export class RulesListComponent implements OnInit, OnChanges {
       .subscribe({
         next: () => {
           this.toastService.success({
-            title: 'Rules',
+            title: 'Reglas',
             message: rule.isActive
               ? 'Regla desactivada correctamente.'
               : 'Regla activada correctamente.',
@@ -153,7 +153,7 @@ export class RulesListComponent implements OnInit, OnChanges {
             error,
             'No se pudo actualizar el estado de la regla.',
           );
-          this.toastService.error({ title: 'Rules', message: this.errorMessage });
+          this.toastService.error({ title: 'Reglas', message: this.errorMessage });
         },
       });
   }

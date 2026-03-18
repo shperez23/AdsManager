@@ -17,29 +17,29 @@ interface MetaRouteLink {
 export class MetaNavigationComponent {
   readonly links: MetaRouteLink[] = [
     {
-      label: 'Operations',
+      label: 'Operaciones',
       route: '/meta/operations',
       description: 'Cuentas Meta y accesos rápidos.',
     },
     {
-      label: 'Campaigns',
+      label: 'Campañas',
       route: '/meta/campaigns',
       description: 'Listado, creación y cambio de estado.',
     },
     {
-      label: 'AdSets',
+      label: 'Conjuntos',
       route: '/meta/adsets',
-      description: 'Creación de ad sets desde UI.',
+      description: 'Creación de conjuntos de anuncios desde la interfaz.',
     },
     {
-      label: 'Ads',
+      label: 'Anuncios',
       route: '/meta/ads',
-      description: 'Creación de ads sin IDs manuales.',
+      description: 'Creación de anuncios sin IDs manuales.',
     },
     {
-      label: 'Insights',
+      label: 'Métricas',
       route: '/meta/insights',
-      description: 'Dashboard básico por cuenta.',
+      description: 'Panel básico por cuenta.',
     },
   ];
 }

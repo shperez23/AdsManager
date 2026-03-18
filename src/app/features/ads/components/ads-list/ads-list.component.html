@@ -1,6 +1,6 @@
 <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
   <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-    <h2 class="text-lg font-semibold text-slate-900">Ads</h2>
+    <h2 class="text-lg font-semibold text-slate-900">Anuncios</h2>
 
     <div class="grid gap-2 md:grid-cols-2 xl:grid-cols-5">
       <input
@@ -14,7 +14,7 @@
       <input
         type="search"
         class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-        placeholder="Filtrar por Campaign ID"
+        placeholder="Filtrar por ID de campaña"
         [ngModel]="campaignIdFilter"
         (ngModelChange)="onCampaignIdChange($event)"
       />
@@ -73,10 +73,10 @@
       <thead class="bg-slate-50">
         <tr>
           <th class="px-4 py-3 text-left font-semibold text-slate-700">Nombre</th>
-          <th class="px-4 py-3 text-left font-semibold text-slate-700">Status</th>
-          <th class="px-4 py-3 text-left font-semibold text-slate-700">Campaign</th>
-          <th class="px-4 py-3 text-left font-semibold text-slate-700">Ad Set</th>
-          <th class="px-4 py-3 text-left font-semibold text-slate-700">Preview URL</th>
+          <th class="px-4 py-3 text-left font-semibold text-slate-700">Estado</th>
+          <th class="px-4 py-3 text-left font-semibold text-slate-700">Campaña</th>
+          <th class="px-4 py-3 text-left font-semibold text-slate-700">Conjunto de anuncios</th>
+          <th class="px-4 py-3 text-left font-semibold text-slate-700">URL de vista previa</th>
           <th class="px-4 py-3 text-left font-semibold text-slate-700">Acciones</th>
         </tr>
       </thead>
@@ -137,7 +137,7 @@
                 class="rounded-md border border-indigo-300 px-3 py-1.5 text-xs font-medium text-indigo-700 transition hover:bg-indigo-50"
                 (click)="onSelectInsights(ad.id)"
               >
-                Insights
+                Métricas
               </button>
             </div>
           </td>

@@ -48,8 +48,8 @@ export class ReportsPageComponent implements OnInit {
   readonly sortOptions: Array<{ value: ReportSortColumn; label: string }> = [
     { value: 'dateStart', label: 'Fecha inicial' },
     { value: 'impressions', label: 'Impresiones' },
-    { value: 'clicks', label: 'Clicks' },
-    { value: 'spend', label: 'Spend' },
+    { value: 'clicks', label: 'Clics' },
+    { value: 'spend', label: 'Gasto' },
     { value: 'ctr', label: 'CTR' },
     { value: 'cpc', label: 'CPC' },
     { value: 'cpm', label: 'CPM' },

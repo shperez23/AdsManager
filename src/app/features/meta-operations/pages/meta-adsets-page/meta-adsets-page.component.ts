@@ -107,7 +107,7 @@ export class MetaAdSetsPageComponent implements OnInit {
       .subscribe({
         next: () => {
           this.toastService.success({
-            title: 'Meta AdSets',
+            title: 'Conjuntos Meta',
             message: 'AdSet creado correctamente.',
           });
           this.form.patchValue({
@@ -122,7 +122,7 @@ export class MetaAdSetsPageComponent implements OnInit {
         error: (error) => {
           this.errorMessage = this.requestFeedbackService.resolveMessage(
             error,
-            'No se pudo crear el ad set de Meta.',
+            'No se pudo crear el conjunto de anuncios de Meta.',
           );
         },
       });
@@ -176,7 +176,7 @@ export class MetaAdSetsPageComponent implements OnInit {
           this.campaigns = [];
           this.errorMessage = this.requestFeedbackService.resolveMessage(
             error,
-            'No se pudieron cargar las campaigns Meta para crear el ad set.',
+            'No se pudieron cargar las campañas de Meta para crear el conjunto de anuncios.',
           );
         },
       });

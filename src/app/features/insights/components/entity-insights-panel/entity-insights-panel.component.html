@@ -40,15 +40,15 @@
       <p class="text-lg font-semibold text-slate-900">{{ totalImpressions | number }}</p>
     </article>
     <article class="rounded-lg border border-slate-200 p-3">
-      <p class="text-xs text-slate-500">Clicks</p>
+      <p class="text-xs text-slate-500">Clics</p>
       <p class="text-lg font-semibold text-slate-900">{{ totalClicks | number }}</p>
     </article>
     <article class="rounded-lg border border-slate-200 p-3">
-      <p class="text-xs text-slate-500">Conversions</p>
+      <p class="text-xs text-slate-500">Conversiones</p>
       <p class="text-lg font-semibold text-slate-900">{{ totalConversions | number }}</p>
     </article>
     <article class="rounded-lg border border-slate-200 p-3">
-      <p class="text-xs text-slate-500">Spend</p>
+      <p class="text-xs text-slate-500">Gasto</p>
       <p class="text-lg font-semibold text-slate-900">{{ totalSpend | currency: 'USD' : 'symbol' : '1.2-2' }}</p>
     </article>
     <article class="rounded-lg border border-slate-200 p-3">
@@ -68,7 +68,7 @@
     </article>
 
     <article class="rounded-lg border border-slate-200 p-3">
-      <h4 class="mb-2 text-sm font-semibold text-slate-700">Spend por día</h4>
+      <h4 class="mb-2 text-sm font-semibold text-slate-700">Gasto por día</h4>
       <div class="h-56"><canvas #spendCanvas></canvas></div>
     </article>
   </div>
@@ -80,8 +80,8 @@
           <th class="px-3 py-2 text-left">Fecha inicio</th>
           <th class="px-3 py-2 text-left">Fecha fin</th>
           <th class="px-3 py-2 text-left">Impresiones</th>
-          <th class="px-3 py-2 text-left">Clicks</th>
-          <th class="px-3 py-2 text-left">Spend</th>
+          <th class="px-3 py-2 text-left">Clics</th>
+          <th class="px-3 py-2 text-left">Gasto</th>
           <th class="px-3 py-2 text-left">CTR</th>
           <th class="px-3 py-2 text-left">CPC</th>
         </tr>

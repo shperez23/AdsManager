@@ -310,9 +310,9 @@ export enum RuleAction {
 }
 
 export const RULE_ENTITY_LEVEL_LABELS: Record<RuleEntityLevel, string> = {
-  [RuleEntityLevel.Campaign]: 'Campaign',
-  [RuleEntityLevel.AdSet]: 'Ad Set',
-  [RuleEntityLevel.Ad]: 'Ad',
+  [RuleEntityLevel.Campaign]: 'Campaña',
+  [RuleEntityLevel.AdSet]: 'Conjunto de anuncios',
+  [RuleEntityLevel.Ad]: 'Anuncio',
 };
 
 export const RULE_METRIC_LABELS: Record<RuleMetric, string> = {
@@ -327,9 +327,9 @@ export const RULE_OPERATOR_LABELS: Record<RuleOperator, string> = {
 };
 
 export const RULE_ACTION_LABELS: Record<RuleAction, string> = {
-  [RuleAction.Pause]: 'Pause',
-  [RuleAction.Activate]: 'Activate',
-  [RuleAction.Notify]: 'Notify',
+  [RuleAction.Pause]: 'Pausar',
+  [RuleAction.Activate]: 'Activar',
+  [RuleAction.Notify]: 'Notificar',
 };
 
 export const RULE_ENTITY_LEVEL_OPTIONS = Object.entries(RULE_ENTITY_LEVEL_LABELS).map(
