@@ -28,6 +28,7 @@ export class ShellComponent {
     { label: 'Campaigns', route: '/campaigns', icon: '🧠' },
     { label: 'Insights', route: '/insights', icon: '📊' },
     { label: 'Meta Connections', route: '/meta-connections', icon: '🔗' },
+    { label: 'Rules', route: '/rules', icon: '⚙️' },
   ];
 
   readonly userInitials$ = this.authSessionService.user$.pipe(

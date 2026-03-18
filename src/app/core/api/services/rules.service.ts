@@ -1,7 +1,13 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { CreateRuleRequest, PaginatedResponse, Rule, UpdateRuleRequest } from '../../../shared/models';
+import {
+  CreateRuleRequest,
+  PaginatedResponse,
+  Rule,
+  RulesQueryParams,
+  UpdateRuleRequest,
+} from '../../../shared/models';
 import { BaseApiService } from './base-api.service';
 
 @Injectable({ providedIn: 'root' })
@@ -10,8 +16,8 @@ export class RulesService {
 
   constructor(private readonly baseApiService: BaseApiService) {}
 
-  getRules(): Observable<PaginatedResponse<Rule>> {
-    return this.baseApiService.get<PaginatedResponse<Rule>>(this.endpoint);
+  getRules(params?: RulesQueryParams): Observable<PaginatedResponse<Rule>> {
+    return this.baseApiService.get<PaginatedResponse<Rule>>(this.endpoint, { params });
   }
 
   createRule(payload: CreateRuleRequest): Observable<Rule> {
@@ -23,10 +29,16 @@ export class RulesService {
   }
 
   activateRule(id: string): Observable<void> {
-    return this.baseApiService.put<void, Record<string, never>>(`${this.endpoint}/${id}/activate`, {});
+    return this.baseApiService.put<void, Record<string, never>>(
+      `${this.endpoint}/${id}/activate`,
+      {},
+    );
   }
 
   deactivateRule(id: string): Observable<void> {
-    return this.baseApiService.put<void, Record<string, never>>(`${this.endpoint}/${id}/deactivate`, {});
+    return this.baseApiService.put<void, Record<string, never>>(
+      `${this.endpoint}/${id}/deactivate`,
+      {},
+    );
   }
 }
