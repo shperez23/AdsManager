@@ -184,7 +184,9 @@ export interface RefreshTokenRequest {
 export interface AuthTokensResponse {
   accessToken: string;
   refreshToken: string;
-  expiresIn: number;
+  expiresIn?: number | string | null;
+  expiresAt?: string | number | null;
+  expiration?: string | number | null;
 }
 
 export interface ProblemDetails {
