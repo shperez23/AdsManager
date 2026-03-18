@@ -30,9 +30,11 @@ export function mapAdAccountDtoToViewModel(dto: unknown): AdAccount {
   return {
     id: readString(source, 'id', 'Id') ?? '',
     name: readString(source, 'name', 'Name') ?? '',
-    status: readString(source, 'status', 'Status') ?? '',
+    status: normalizeAdAccountStatus(readUnknown(source, 'status', 'Status')),
     currency: normalizeOptionalString(readUnknown(source, 'currency', 'Currency')),
-    timezone: normalizeOptionalString(readUnknown(source, 'timezone', 'Timezone')),
+    timezone: normalizeOptionalString(
+      readUnknown(source, 'timezone', 'Timezone', 'timezoneName', 'TimezoneName'),
+    ),
     businessId: normalizeOptionalString(readUnknown(source, 'businessId', 'BusinessId')),
     createdAt: normalizeOptionalString(readUnknown(source, 'createdAt', 'CreatedAt')),
     updatedAt: normalizeOptionalString(readUnknown(source, 'updatedAt', 'UpdatedAt')),
@@ -124,16 +126,38 @@ function normalizeOptionalString(value?: unknown): string | undefined {
   return normalizedValue.length > 0 ? normalizedValue : undefined;
 }
 
+function normalizeAdAccountStatus(value?: unknown): string {
+  const normalizedValue = normalizeOptionalString(value);
+
+  if (!normalizedValue) {
+    return '';
+  }
+
+  if (normalizedValue === '1') {
+    return 'ACTIVE';
+  }
+
+  if (normalizedValue === '2') {
+    return 'DISABLED';
+  }
+
+  return normalizedValue.toUpperCase();
+}
+
 type UnknownRecord = Record<string, unknown>;
 
 function normalizePaginatedResponse<TDto>(response: unknown): PaginatedResponse<TDto> {
   const source = toRecord(response);
-  const items = readArray(source, 'items', 'Items', 'data', 'Data', 'result', 'Result', 'value', 'Value');
-  const pageSize = Math.max(readNumber(source, 'pageSize', 'PageSize', 'limit', 'Limit'), items.length || 10);
-  const page = Math.max(readNumber(source, 'page', 'Page', 'currentPage', 'CurrentPage'), 1);
-  const totalItems = readNumber(source, 'totalItems', 'TotalItems', 'count', 'Count') || items.length;
+  const payload = resolveCollectionPayload(source);
+  const items = readArray(payload, 'items', 'Items', 'data', 'Data', 'result', 'Result', 'value', 'Value');
+  const pageSize = Math.max(
+    readNumber(payload, 'pageSize', 'PageSize', 'limit', 'Limit'),
+    items.length || 10,
+  );
+  const page = Math.max(readNumber(payload, 'page', 'Page', 'currentPage', 'CurrentPage'), 1);
+  const totalItems = readNumber(payload, 'totalItems', 'TotalItems', 'total', 'Total', 'count', 'Count') || items.length;
   const totalPages = Math.max(
-    readNumber(source, 'totalPages', 'TotalPages') || Math.ceil(totalItems / Math.max(pageSize, 1)),
+    readNumber(payload, 'totalPages', 'TotalPages') || Math.ceil(totalItems / Math.max(pageSize, 1)),
     1,
   );
 
@@ -143,9 +167,46 @@ function normalizePaginatedResponse<TDto>(response: unknown): PaginatedResponse<
     pageSize,
     totalItems,
     totalPages,
-    hasNext: readBoolean(source, 'hasNext', 'HasNext') ?? page < totalPages,
-    hasPrevious: readBoolean(source, 'hasPrevious', 'HasPrevious') ?? page > 1,
+    hasNext: readBoolean(payload, 'hasNext', 'HasNext') ?? page < totalPages,
+    hasPrevious: readBoolean(payload, 'hasPrevious', 'HasPrevious') ?? page > 1,
   };
+}
+
+function resolveCollectionPayload(source: UnknownRecord): UnknownRecord {
+  const candidate = readObject(source, 'data', 'Data', 'result', 'Result', 'value', 'Value');
+
+  if (!candidate) {
+    return source;
+  }
+
+  const candidateItems = readArray(candidate, 'items', 'Items', 'data', 'Data', 'result', 'Result', 'value', 'Value');
+
+  if (candidateItems.length > 0 || hasPaginationMetadata(candidate)) {
+    return candidate;
+  }
+
+  return source;
+}
+
+function hasPaginationMetadata(source: UnknownRecord): boolean {
+  return [
+    'page',
+    'Page',
+    'currentPage',
+    'CurrentPage',
+    'pageSize',
+    'PageSize',
+    'limit',
+    'Limit',
+    'totalItems',
+    'TotalItems',
+    'total',
+    'Total',
+    'count',
+    'Count',
+    'totalPages',
+    'TotalPages',
+  ].some((key) => key in source);
 }
 
 function toRecord(value: unknown): UnknownRecord {
@@ -167,6 +228,17 @@ function readUnknown(source: UnknownRecord, ...keys: string[]): unknown {
   for (const key of keys) {
     if (key in source) {
       return source[key];
+    }
+  }
+
+  return undefined;
+}
+
+function readObject(source: UnknownRecord, ...keys: string[]): UnknownRecord | undefined {
+  for (const key of keys) {
+    const value = source[key];
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      return value as UnknownRecord;
     }
   }
 
