@@ -1,5 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, EventEmitter, OnInit, Output, inject } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges,
+  inject,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, finalize, Subject } from 'rxjs';
@@ -19,7 +29,8 @@ type AdSetStatusFilter = 'ALL' | 'ACTIVE' | 'PAUSED' | 'DISABLED';
   imports: [CommonModule, FormsModule, LoadingStateComponent, EmptyStateComponent, ErrorStateComponent],
   templateUrl: './adsets-list.component.html',
 })
-export class AdsetsListComponent implements OnInit {
+export class AdsetsListComponent implements OnInit, OnChanges {
+  @Input() reloadKey = 0;
   @Output() editAdSet = new EventEmitter<AdSet>();
 
   readonly pageSizeOptions = [5, 10, 20, 50];
@@ -47,6 +58,12 @@ export class AdsetsListComponent implements OnInit {
   ngOnInit(): void {
     this.listenToSearch();
     this.loadAdSets();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['reloadKey'] && !changes['reloadKey'].firstChange) {
+      this.loadAdSets();
+    }
   }
 
   onSearchChange(value: string): void {
@@ -114,6 +131,10 @@ export class AdsetsListComponent implements OnInit {
 
   trackByAdSet(_: number, adSet: AdSet): string {
     return adSet.id;
+  }
+
+  getDisplayBudget(adSet: AdSet): number {
+    return adSet.budget ?? adSet.dailyBudget ?? 0;
   }
 
   private listenToSearch(): void {

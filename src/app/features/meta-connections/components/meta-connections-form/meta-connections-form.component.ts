@@ -65,7 +65,7 @@ export class MetaConnectionsFormComponent implements OnChanges {
       appSecret: this.asOptional(value.appSecret),
       accessToken: this.asOptional(value.accessToken),
       refreshToken: this.asOptional(value.refreshToken),
-      tokenExpiration: this.asOptional(value.tokenExpiration),
+      tokenExpiration: this.asOptionalDate(value.tokenExpiration),
       businessId: this.asOptional(value.businessId),
     };
 
@@ -91,5 +91,14 @@ export class MetaConnectionsFormComponent implements OnChanges {
   private asOptional(value: string): string | undefined {
     const trimmed = value.trim();
     return trimmed.length > 0 ? trimmed : undefined;
+  }
+
+  private asOptionalDate(value: string): string | undefined {
+    if (!value) {
+      return undefined;
+    }
+
+    const parsedDate = new Date(value);
+    return Number.isNaN(parsedDate.getTime()) ? undefined : parsedDate.toISOString();
   }
 }
