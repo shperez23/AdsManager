@@ -378,3 +378,12 @@ export interface InsightsResponse {
   currency?: string;
   rows: InsightMetrics[];
 }
+
+export interface InsightsReportResponse extends InsightsResponse {
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
