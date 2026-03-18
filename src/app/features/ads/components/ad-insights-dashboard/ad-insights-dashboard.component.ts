@@ -5,6 +5,7 @@ import { Subject, finalize, takeUntil } from 'rxjs';
 
 import { AdsService } from '../../../../core/api/services/ads.service';
 import { InsightMetrics } from '../../../../shared/models';
+import { createDefaultDateRange } from '../../../../shared/utils/insights.util';
 
 @Component({
   selector: 'app-ad-insights-dashboard',
@@ -20,10 +21,10 @@ export class AdInsightsDashboardComponent implements AfterViewInit, OnDestroy {
   @ViewChild('conversionsCanvas') private conversionsCanvas?: ElementRef<HTMLCanvasElement>;
   @ViewChild('spendCanvas') private spendCanvas?: ElementRef<HTMLCanvasElement>;
 
-  readonly today = this.toDateInput(new Date());
+  readonly today = createDefaultDateRange(0).dateTo;
 
-  startDate = this.toDateInput(this.addDays(new Date(), -7));
-  endDate = this.today;
+  startDate = createDefaultDateRange(7).dateFrom;
+  endDate = createDefaultDateRange(7).dateTo;
 
   rows: InsightMetrics[] = [];
   isLoading = false;
@@ -222,13 +223,4 @@ export class AdInsightsDashboardComponent implements AfterViewInit, OnDestroy {
     this.renderedCanvases = [];
   }
 
-  private toDateInput(date: Date): string {
-    return date.toISOString().slice(0, 10);
-  }
-
-  private addDays(date: Date, days: number): Date {
-    const nextDate = new Date(date);
-    nextDate.setDate(nextDate.getDate() + days);
-    return nextDate;
-  }
 }

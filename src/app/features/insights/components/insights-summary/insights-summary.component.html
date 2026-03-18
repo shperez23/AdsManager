@@ -2,11 +2,11 @@
   <div class="flex flex-wrap items-end gap-3">
     <div>
       <label class="block text-xs text-slate-600">Desde</label>
-      <input [(ngModel)]="startDate" type="date" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+      <input [(ngModel)]="startDate" [max]="endDate" type="date" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
     </div>
     <div>
       <label class="block text-xs text-slate-600">Hasta</label>
-      <input [(ngModel)]="endDate" type="date" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+      <input [(ngModel)]="endDate" [max]="today" type="date" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
     </div>
     <button class="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white" (click)="onApply()">Aplicar</button>
   </div>

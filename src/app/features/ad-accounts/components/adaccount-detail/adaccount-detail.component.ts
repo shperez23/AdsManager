@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
-import { Subject, finalize, forkJoin, takeUntil } from 'rxjs';
+import { Subject, finalize, forkJoin, map, of, switchMap, takeUntil } from 'rxjs';
 
-import { AdsService } from '../../../../core/api/services/ads.service';
 import { AdAccountsService } from '../../../../core/api/services/adaccounts.service';
+import { AdsService } from '../../../../core/api/services/ads.service';
 import { AdSetsService } from '../../../../core/api/services/adsets.service';
-import { Ad, AdAccount, AdSet } from '../../../../shared/models';
+import { CampaignsService } from '../../../../core/api/services/campaigns.service';
+import { Ad, AdAccount, AdSet, Campaign } from '../../../../shared/models';
 
 @Component({
   selector: 'app-adaccount-detail',
@@ -17,6 +18,7 @@ export class AdaccountDetailComponent implements OnChanges, OnDestroy {
   @Input() adAccountId: string | null = null;
 
   adAccount: AdAccount | null = null;
+  campaigns: Campaign[] = [];
   ads: Ad[] = [];
   adSets: AdSet[] = [];
 
@@ -27,6 +29,7 @@ export class AdaccountDetailComponent implements OnChanges, OnDestroy {
 
   constructor(
     private readonly adAccountsService: AdAccountsService,
+    private readonly campaignsService: CampaignsService,
     private readonly adsService: AdsService,
     private readonly adSetsService: AdSetsService,
   ) {}
@@ -49,6 +52,10 @@ export class AdaccountDetailComponent implements OnChanges, OnDestroy {
     this.destroy$.complete();
   }
 
+  trackByCampaign(_: number, campaign: Campaign): string {
+    return campaign.id;
+  }
+
   trackByAd(_: number, ad: Ad): string {
     return ad.id;
   }
@@ -61,22 +68,77 @@ export class AdaccountDetailComponent implements OnChanges, OnDestroy {
     this.isLoading = true;
     this.errorMessage = null;
 
-    forkJoin({
-      adAccounts: this.adAccountsService.getAdAccounts({ Page: 1, PageSize: 100, Search: id }),
-      ads: this.adsService.getAds({ Page: 1, PageSize: 10, Search: id }),
-      adSets: this.adSetsService.getAdSets({ Page: 1, PageSize: 10, Search: id }),
-    })
+    this.adAccountsService
+      .getAdAccounts({ Page: 1, PageSize: 100, Search: id })
       .pipe(
         takeUntil(this.destroy$),
+        switchMap((adAccountsResponse) => {
+          const selectedAdAccount = adAccountsResponse.items.find((item) => item.id === id) ?? null;
+
+          if (!selectedAdAccount) {
+            return of({ selectedAdAccount: null, campaigns: [], adSets: [], ads: [] });
+          }
+
+          return this.campaignsService.getCampaigns({ Page: 1, PageSize: 100, AdAccountId: id }).pipe(
+            switchMap((campaignsResponse) => {
+              const campaigns = campaignsResponse.items;
+
+              if (campaigns.length === 0) {
+                return of({ selectedAdAccount, campaigns, adSets: [], ads: [] });
+              }
+
+              return forkJoin(
+                campaigns.map((campaign) =>
+                  this.adSetsService.getAdSets({
+                    Page: 1,
+                    PageSize: 100,
+                    CampaignId: campaign.id,
+                  }),
+                ),
+              ).pipe(
+                map((adSetResponses) => adSetResponses.flatMap((response) => response.items)),
+                switchMap((adSets) => {
+                  if (adSets.length === 0) {
+                    return of({ selectedAdAccount, campaigns, adSets, ads: [] });
+                  }
+
+                  return forkJoin(
+                    adSets.map((adSet) =>
+                      this.adsService.getAds({
+                        Page: 1,
+                        PageSize: 100,
+                        AdSetId: adSet.id,
+                      }),
+                    ),
+                  ).pipe(
+                    map((adsResponses) => ({
+                      selectedAdAccount,
+                      campaigns,
+                      adSets,
+                      ads: adsResponses.flatMap((response) => response.items),
+                    })),
+                  );
+                }),
+              );
+            }),
+          );
+        }),
         finalize(() => {
           this.isLoading = false;
         }),
       )
       .subscribe({
-        next: ({ adAccounts, ads, adSets }) => {
-          this.adAccount = adAccounts.items.find((item) => item.id === id) ?? null;
-          this.ads = ads.items;
-          this.adSets = adSets.items;
+        next: ({ selectedAdAccount, campaigns, adSets, ads }) => {
+          if (!selectedAdAccount) {
+            this.errorMessage = 'No se encontró el AdAccount solicitado.';
+            this.resetState();
+            return;
+          }
+
+          this.adAccount = selectedAdAccount;
+          this.campaigns = campaigns;
+          this.adSets = adSets;
+          this.ads = ads;
         },
         error: () => {
           this.errorMessage = 'No se pudo cargar el detalle del AdAccount.';
@@ -87,6 +149,7 @@ export class AdaccountDetailComponent implements OnChanges, OnDestroy {
 
   private resetState(): void {
     this.adAccount = null;
+    this.campaigns = [];
     this.ads = [];
     this.adSets = [];
   }

@@ -1,0 +1,102 @@
+<section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+  <div class="mb-4 grid gap-3 lg:grid-cols-4">
+    <label class="text-xs font-medium text-slate-600">
+      {{ entityLabel | titlecase }}
+      <select
+        class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+        [ngModel]="selectedEntityId"
+        (ngModelChange)="onEntityChange($event)"
+      >
+        <option value="">Seleccionar {{ entityLabel }}</option>
+        <option *ngFor="let option of options" [value]="option.id">{{ option.name }} · {{ option.status }}</option>
+      </select>
+    </label>
+
+    <label class="text-xs font-medium text-slate-600">
+      Desde
+      <input [(ngModel)]="startDate" [max]="endDate" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+    </label>
+
+    <label class="text-xs font-medium text-slate-600">
+      Hasta
+      <input [(ngModel)]="endDate" [max]="today" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+    </label>
+
+    <button
+      type="button"
+      class="self-end rounded-lg bg-blue-600 px-4 py-2 text-sm text-white disabled:opacity-70"
+      [disabled]="isLoadingInsights || isLoadingOptions"
+      (click)="onApply()"
+    >
+      {{ isLoadingInsights ? 'Cargando...' : 'Aplicar' }}
+    </button>
+  </div>
+
+  <p *ngIf="errorMessage" class="mb-3 text-sm text-red-600">{{ errorMessage }}</p>
+
+  <div class="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+    <article class="rounded-lg border border-slate-200 p-3">
+      <p class="text-xs text-slate-500">Impresiones</p>
+      <p class="text-lg font-semibold text-slate-900">{{ totalImpressions | number }}</p>
+    </article>
+    <article class="rounded-lg border border-slate-200 p-3">
+      <p class="text-xs text-slate-500">Clicks</p>
+      <p class="text-lg font-semibold text-slate-900">{{ totalClicks | number }}</p>
+    </article>
+    <article class="rounded-lg border border-slate-200 p-3">
+      <p class="text-xs text-slate-500">Conversions</p>
+      <p class="text-lg font-semibold text-slate-900">{{ totalConversions | number }}</p>
+    </article>
+    <article class="rounded-lg border border-slate-200 p-3">
+      <p class="text-xs text-slate-500">Spend</p>
+      <p class="text-lg font-semibold text-slate-900">{{ totalSpend | currency: 'USD' : 'symbol' : '1.2-2' }}</p>
+    </article>
+    <article class="rounded-lg border border-slate-200 p-3">
+      <p class="text-xs text-slate-500">CTR prom.</p>
+      <p class="text-lg font-semibold text-slate-900">{{ averageCtr | number: '1.2-2' }}%</p>
+    </article>
+    <article class="rounded-lg border border-slate-200 p-3">
+      <p class="text-xs text-slate-500">CPC prom.</p>
+      <p class="text-lg font-semibold text-slate-900">{{ averageCpc | currency: 'USD' : 'symbol' : '1.2-2' }}</p>
+    </article>
+  </div>
+
+  <div class="mb-4 grid gap-4 lg:grid-cols-2">
+    <article class="rounded-lg border border-slate-200 p-3">
+      <h4 class="mb-2 text-sm font-semibold text-slate-700">Impresiones por día</h4>
+      <div class="h-56"><canvas #impressionsCanvas></canvas></div>
+    </article>
+
+    <article class="rounded-lg border border-slate-200 p-3">
+      <h4 class="mb-2 text-sm font-semibold text-slate-700">Spend por día</h4>
+      <div class="h-56"><canvas #spendCanvas></canvas></div>
+    </article>
+  </div>
+
+  <div class="overflow-x-auto rounded-lg border border-slate-200">
+    <table class="min-w-full divide-y divide-slate-200 text-sm">
+      <thead class="bg-slate-50">
+        <tr>
+          <th class="px-3 py-2 text-left">Fecha inicio</th>
+          <th class="px-3 py-2 text-left">Fecha fin</th>
+          <th class="px-3 py-2 text-left">Impresiones</th>
+          <th class="px-3 py-2 text-left">Clicks</th>
+          <th class="px-3 py-2 text-left">Spend</th>
+          <th class="px-3 py-2 text-left">CTR</th>
+          <th class="px-3 py-2 text-left">CPC</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-200 bg-white">
+        <tr *ngFor="let row of rows">
+          <td class="px-3 py-2">{{ row.dateStart }}</td>
+          <td class="px-3 py-2">{{ row.dateEnd }}</td>
+          <td class="px-3 py-2">{{ row.impressions | number }}</td>
+          <td class="px-3 py-2">{{ row.clicks | number }}</td>
+          <td class="px-3 py-2">{{ row.spend | number: '1.0-2' }}</td>
+          <td class="px-3 py-2">{{ (row.ctr ?? 0) | number: '1.2-2' }}%</td>
+          <td class="px-3 py-2">{{ (row.cpc ?? 0) | number: '1.2-2' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

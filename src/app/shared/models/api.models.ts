@@ -151,6 +151,9 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
+  tenantName?: string;
+  tenantSlug?: string;
+  name?: string;
   email: string;
   password: string;
   fullName?: string;
@@ -177,25 +180,33 @@ export interface ProblemDetails {
 
 export interface MetaConnection {
   id: string;
-  provider: string;
-  accountName: string;
-  status: string;
+  appId?: string;
+  appSecret?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  tokenExpiration?: string;
+  businessId?: string;
+  status?: string;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface CreateMetaConnectionRequest {
-  provider: string;
-  accessToken: string;
+  appId?: string;
+  appSecret?: string;
+  accessToken?: string;
   refreshToken?: string;
-  expiresAt?: string;
+  tokenExpiration?: string;
+  businessId?: string;
 }
 
 export interface UpdateMetaConnectionRequest {
+  appId?: string;
+  appSecret?: string;
   accessToken?: string;
   refreshToken?: string;
-  expiresAt?: string;
-  status?: string;
+  tokenExpiration?: string;
+  businessId?: string;
 }
 
 export interface MetaCampaignCreateRequest {
@@ -299,8 +310,16 @@ export interface InsightMetrics {
   ctr?: number;
   cpc?: number;
   cpm?: number;
+  reach?: number;
+  frequency?: number;
+  actions?: Record<string, number>;
 }
 
 export interface InsightsResponse {
+  accountId?: string;
+  campaignId?: string;
+  adSetId?: string;
+  adId?: string;
+  currency?: string;
   rows: InsightMetrics[];
 }
