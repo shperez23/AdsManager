@@ -12,9 +12,7 @@ export interface PaginationQueryParams {
   SortDirection?: SortDirection;
 }
 
-export interface AdAccountsQueryParams extends PaginationQueryParams {
-  BusinessId?: string;
-}
+export interface AdAccountsQueryParams extends PaginationQueryParams {}
 
 export interface AdsQueryParams extends PaginationQueryParams {
   CampaignId?: string;
