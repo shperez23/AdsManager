@@ -31,10 +31,21 @@ import { LoadingStateComponent } from '../../../../shared/ui/states/loading-stat
 
 type RuleStatusFilter = 'ALL' | 'ACTIVE' | 'INACTIVE';
 
+interface RuleStatusOption {
+  label: string;
+  value: RuleStatusFilter;
+}
+
 @Component({
   selector: 'app-rules-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingStateComponent, EmptyStateComponent, ErrorStateComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    LoadingStateComponent,
+    EmptyStateComponent,
+    ErrorStateComponent,
+  ],
   templateUrl: './rules-list.component.html',
 })
 export class RulesListComponent implements OnInit, OnChanges {
@@ -42,7 +53,11 @@ export class RulesListComponent implements OnInit, OnChanges {
   @Output() editRule = new EventEmitter<Rule>();
 
   readonly pageSizeOptions = [5, 10, 20, 50];
-  readonly statusOptions: RuleStatusFilter[] = ['ALL', 'ACTIVE', 'INACTIVE'];
+  readonly statusOptions: RuleStatusOption[] = [
+    { label: 'Todos', value: 'ALL' },
+    { label: 'Activas', value: 'ACTIVE' },
+    { label: 'Inactivas', value: 'INACTIVE' },
+  ];
   readonly entityLevelLabels = RULE_ENTITY_LEVEL_LABELS;
   readonly metricLabels = RULE_METRIC_LABELS;
   readonly operatorLabels = RULE_OPERATOR_LABELS;
@@ -156,11 +171,13 @@ export class RulesListComponent implements OnInit, OnChanges {
   }
 
   private listenToSearch(): void {
-    this.searchChange$.pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef)).subscribe((term) => {
-      this.searchTerm = term;
-      this.currentPage = 1;
-      this.loadRules();
-    });
+    this.searchChange$
+      .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
+      .subscribe((term) => {
+        this.searchTerm = term;
+        this.currentPage = 1;
+        this.loadRules();
+      });
   }
 
   private loadRules(): void {

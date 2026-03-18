@@ -6,8 +6,11 @@ import { finalize } from 'rxjs';
 import { RulesService } from '../../../core/api/services/rules.service';
 import { RequestFeedbackService } from '../../../core/errors/request-feedback.service';
 import { ToastService } from '../../../core/notifications/toast.service';
-import { CreateRuleRequest, Rule, UpdateRuleRequest } from '../../../shared/models';
-import { RuleFormSubmitEvent, RulesFormComponent } from '../components/rules-form/rules-form.component';
+import { Rule } from '../../../shared/models';
+import {
+  RuleFormSubmitEvent,
+  RulesFormComponent,
+} from '../components/rules-form/rules-form.component';
 import { RulesListComponent } from '../components/rules-list/rules-list.component';
 
 @Component({
@@ -42,8 +45,8 @@ export class RulesPageComponent {
 
     const request$ =
       event.mode === 'edit' && this.selectedRule
-        ? this.rulesService.updateRule(this.selectedRule.id, event.value as UpdateRuleRequest)
-        : this.rulesService.createRule(event.value as CreateRuleRequest);
+        ? this.rulesService.updateRule(this.selectedRule.id, event.value)
+        : this.rulesService.createRule(event.value);
 
     request$
       .pipe(
