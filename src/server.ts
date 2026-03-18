@@ -7,10 +7,38 @@ import {
 import express from 'express';
 import { join } from 'node:path';
 
+import { environment } from './environments/environment';
+
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
+
+function escapeJavaScriptString(value: string): string {
+  return JSON.stringify(value);
+}
+
+function resolveServerRuntimeConfig() {
+  return {
+    apiUrl: process.env['ADSMANAGER_API_URL']?.trim() || environment.apiUrl,
+    apiVersion: process.env['ADSMANAGER_API_VERSION']?.trim() || environment.apiVersion,
+  };
+}
+
+app.get('/app-config.js', (_req, res) => {
+  const config = resolveServerRuntimeConfig();
+
+  res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  res.send(
+    [
+      'window.__APP_CONFIG__ = {',
+      `  apiUrl: ${escapeJavaScriptString(config.apiUrl)},`,
+      `  apiVersion: ${escapeJavaScriptString(config.apiVersion)},`,
+      '};',
+    ].join('\n'),
+  );
+});
 
 /**
  * Example Express Rest API endpoints can be defined here.
@@ -41,9 +69,7 @@ app.use(
 app.use((req, res, next) => {
   angularApp
     .handle(req)
-    .then((response) =>
-      response ? writeResponseToNodeResponse(response, res) : next(),
-    )
+    .then((response) => (response ? writeResponseToNodeResponse(response, res) : next()))
     .catch(next);
 });
 
