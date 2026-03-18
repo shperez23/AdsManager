@@ -1,13 +1,15 @@
-import { environment } from '../../../environments/environment';
+import { resolveRuntimeAppConfig } from './runtime-config';
 
 export interface ApiConfig {
   apiUrl: string;
   apiVersion: string;
 }
 
-export const API_CONFIG: ApiConfig = {
-  apiUrl: environment.apiUrl,
-  apiVersion: environment.apiVersion,
-};
+export function getApiConfig(): ApiConfig {
+  return resolveRuntimeAppConfig();
+}
 
-export const API_BASE_URL = `${API_CONFIG.apiUrl}/api/${API_CONFIG.apiVersion}`;
+export function getApiBaseUrl(): string {
+  const config = getApiConfig();
+  return `${config.apiUrl}/api/${config.apiVersion}`;
+}

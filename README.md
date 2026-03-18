@@ -2,6 +2,42 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.6.
 
+## Runtime backend configuration
+
+The frontend no longer depends on a hardcoded backend URL at build time. The API base is resolved using this order of precedence:
+
+1. `window.__APP_CONFIG__` loaded from `/app-config.js`.
+2. Server environment variables (`ADSMANAGER_API_URL` and `ADSMANAGER_API_VERSION`) when running the Angular SSR server.
+3. Angular environment defaults from `src/environments/environment.ts` or `src/environments/environment.prod.ts`.
+
+### Change the backend URL without rebuilding
+
+#### Option 1: edit the external config file
+
+Update `public/app-config.js` before building, or replace `dist/adsmanager-frontend/browser/app-config.js` after building/deploying:
+
+```js
+window.__APP_CONFIG__ = {
+  apiUrl: 'https://api.my-company.com',
+  apiVersion: 'v2',
+};
+```
+
+This is the recommended option for static hosting because it lets you point the same bundle to a different backend without recompiling Angular.
+
+#### Option 2: override through environment variables
+
+When using the SSR Node server, set environment variables before starting the server:
+
+```bash
+export ADSMANAGER_API_URL="https://api.my-company.com"
+export ADSMANAGER_API_VERSION="v2"
+npm run build
+node dist/adsmanager-frontend/server/server.mjs
+```
+
+The server exposes `/app-config.js` dynamically, so each deployment can inject the backend URL at runtime without changing the compiled frontend assets.
+
 ## Development server
 
 To start a local development server, run:

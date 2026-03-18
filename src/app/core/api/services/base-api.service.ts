@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-import { API_BASE_URL } from '../../config/api-config';
+import { getApiBaseUrl } from '../../config/api-config';
 import { normalizeApiError } from '../utils/api-error.util';
 
 export type QueryParamValue = string | number | boolean | ReadonlyArray<string | number | boolean>;
@@ -17,8 +17,6 @@ export interface BaseApiRequestOptions {
   providedIn: 'root',
 })
 export class BaseApiService {
-  private readonly baseUrl = API_BASE_URL;
-
   constructor(private readonly http: HttpClient) {}
 
   get<T>(endpoint: string, options?: BaseApiRequestOptions): Observable<T> {
@@ -80,7 +78,7 @@ export class BaseApiService {
 
   private buildUrl(endpoint: string): string {
     const normalizedEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
-    return `${this.baseUrl}/${normalizedEndpoint}`;
+    return `${getApiBaseUrl()}/${normalizedEndpoint}`;
   }
 
   private buildParams(params?: BaseApiRequestOptions['params']): HttpParams | undefined {
