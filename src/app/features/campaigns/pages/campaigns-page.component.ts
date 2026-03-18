@@ -7,7 +7,7 @@ import { CampaignsService } from '../../../core/api/services/campaigns.service';
 import { RequestFeedbackService } from '../../../core/errors/request-feedback.service';
 import { ToastService } from '../../../core/notifications/toast.service';
 import { Campaign, CreateCampaignRequest, UpdateCampaignRequest } from '../../../shared/models';
-import { CampaignsFormComponent, CampaignFormSubmitEvent } from '../components/campaigns-form/campaigns-form.component';
+import { CampaignFormSubmitEvent, CampaignsFormComponent } from '../components/campaigns-form/campaigns-form.component';
 import { CampaignsListComponent } from '../components/campaigns-list/campaigns-list.component';
 
 @Component({
@@ -19,6 +19,7 @@ import { CampaignsListComponent } from '../components/campaigns-list/campaigns-l
 export class CampaignsPageComponent {
   selectedCampaign: Campaign | null = null;
   isSubmitting = false;
+  isLoadingCampaign = false;
   reloadKey = 0;
 
   private readonly destroyRef = inject(DestroyRef);
@@ -30,7 +31,26 @@ export class CampaignsPageComponent {
   ) {}
 
   onEditCampaign(campaign: Campaign): void {
-    this.selectedCampaign = campaign;
+    this.isLoadingCampaign = true;
+
+    this.campaignsService
+      .getCampaignById(campaign.id)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => (this.isLoadingCampaign = false)),
+      )
+      .subscribe({
+        next: (campaignDetail) => {
+          this.selectedCampaign = campaignDetail;
+        },
+        error: (error) => {
+          this.requestFeedbackService.showError('Campaigns', error, 'No se pudo cargar la campaign seleccionada.');
+        },
+      });
+  }
+
+  onCancelEdit(): void {
+    this.selectedCampaign = null;
   }
 
   onSubmit(event: CampaignFormSubmitEvent): void {
@@ -49,7 +69,10 @@ export class CampaignsPageComponent {
         next: () => {
           this.selectedCampaign = null;
           this.reloadKey += 1;
-          this.toastService.success({ title: 'Campaigns', message: 'Operación completada.' });
+          this.toastService.success({
+            title: 'Campaigns',
+            message: event.mode === 'edit' ? 'Campaign actualizada correctamente.' : 'Campaign creada correctamente.',
+          });
         },
         error: (error) => {
           this.requestFeedbackService.showError('Campaigns', error, 'No se pudo guardar la campaign.');
