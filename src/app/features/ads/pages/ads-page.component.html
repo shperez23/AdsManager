@@ -1,4 +1,4 @@
 <div class="space-y-4">
   <app-ads-form [ad]="selectedAd" [isSubmitting]="isSubmitting" (submitForm)="onSubmitForm($event)"></app-ads-form>
-  <app-ads-list (editAd)="onEditAd($event)"></app-ads-list>
+  <app-ads-list [reloadKey]="reloadKey" (editAd)="onEditAd($event)"></app-ads-list>
 </div>

@@ -9,6 +9,19 @@ export interface CampaignFormSubmitEvent {
   value: CreateCampaignRequest | UpdateCampaignRequest;
 }
 
+type CampaignStatus = 'ACTIVE' | 'PAUSED';
+
+type CampaignFormGroup = FormGroup<{
+  adAccountId: FormControl<string>;
+  name: FormControl<string>;
+  objective: FormControl<string>;
+  status: FormControl<CampaignStatus>;
+  dailyBudget: FormControl<number>;
+  lifetimeBudget: FormControl<number>;
+  startDate: FormControl<string>;
+  endDate: FormControl<string>;
+}>;
+
 @Component({
   selector: 'app-campaigns-form',
   standalone: true,
@@ -21,10 +34,15 @@ export class CampaignsFormComponent implements OnChanges {
 
   @Output() submitForm = new EventEmitter<CampaignFormSubmitEvent>();
 
-  readonly form = new FormGroup({
+  readonly form: CampaignFormGroup = new FormGroup({
     adAccountId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    name: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    status: new FormControl('ACTIVE', { nonNullable: true }),
+    name: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(120)] }),
+    objective: new FormControl('', { nonNullable: true }),
+    status: new FormControl<CampaignStatus>('ACTIVE', { nonNullable: true }),
+    dailyBudget: new FormControl(0, { nonNullable: true }),
+    lifetimeBudget: new FormControl(0, { nonNullable: true }),
+    startDate: new FormControl('', { nonNullable: true }),
+    endDate: new FormControl('', { nonNullable: true }),
   });
 
   get isEditMode(): boolean {
@@ -32,21 +50,85 @@ export class CampaignsFormComponent implements OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (!changes['campaign']) return;
+    if (!changes['campaign']) {
+      return;
+    }
 
     this.form.reset({
       adAccountId: this.campaign?.adAccountId ?? '',
       name: this.campaign?.name ?? '',
-      status: this.campaign?.status ?? 'ACTIVE',
+      objective: this.campaign?.objective ?? '',
+      status: this.toCampaignStatus(this.campaign?.status),
+      dailyBudget: this.campaign?.dailyBudget ?? 0,
+      lifetimeBudget: this.campaign?.lifetimeBudget ?? 0,
+      startDate: this.toDateTimeLocal(this.campaign?.startDate),
+      endDate: this.toDateTimeLocal(this.campaign?.endDate),
     });
   }
 
   onSubmit(): void {
-    if (this.form.invalid) return;
+    if (this.form.invalid || this.isSubmitting) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
     const value = this.form.getRawValue();
+
     this.submitForm.emit({
       mode: this.isEditMode ? 'edit' : 'create',
-      value: this.isEditMode ? { name: value.name, status: value.status } : value,
+      value: this.isEditMode
+        ? {
+            name: value.name.trim(),
+            objective: this.asOptional(value.objective),
+            status: value.status,
+            dailyBudget: this.asOptionalNumber(value.dailyBudget),
+            lifetimeBudget: this.asOptionalNumber(value.lifetimeBudget),
+            startDate: this.asOptionalDate(value.startDate),
+            endDate: this.asOptionalDate(value.endDate),
+          }
+        : {
+            adAccountId: value.adAccountId.trim(),
+            name: value.name.trim(),
+            objective: this.asOptional(value.objective),
+            status: value.status,
+            dailyBudget: this.asOptionalNumber(value.dailyBudget),
+            lifetimeBudget: this.asOptionalNumber(value.lifetimeBudget),
+          },
     });
+  }
+
+  private toCampaignStatus(status?: string): CampaignStatus {
+    return status === 'PAUSED' ? 'PAUSED' : 'ACTIVE';
+  }
+
+  private toDateTimeLocal(value?: string): string {
+    if (!value) {
+      return '';
+    }
+
+    const parsedDate = new Date(value);
+    if (Number.isNaN(parsedDate.getTime())) {
+      return '';
+    }
+
+    return parsedDate.toISOString().slice(0, 16);
+  }
+
+  private asOptional(value: string): string | undefined {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+  }
+
+  private asOptionalNumber(value: number): number | undefined {
+    return value > 0 ? value : undefined;
+  }
+
+  private asOptionalDate(value: string): string | undefined {
+    if (!value) {
+      return undefined;
+    }
+
+    const parsedDate = new Date(value);
+    return Number.isNaN(parsedDate.getTime()) ? undefined : parsedDate.toISOString();
   }
 }

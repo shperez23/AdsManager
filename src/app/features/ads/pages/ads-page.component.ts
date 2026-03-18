@@ -19,6 +19,7 @@ import { AdsListComponent } from '../components/ads-list/ads-list.component';
 export class AdsPageComponent {
   selectedAd: Ad | null = null;
   isSubmitting = false;
+  reloadKey = 0;
 
   private readonly destroyRef = inject(DestroyRef);
 
@@ -48,6 +49,7 @@ export class AdsPageComponent {
       .subscribe({
         next: () => {
           this.selectedAd = null;
+          this.reloadKey += 1;
           this.toastService.success({ title: 'Ads', message: 'Registro guardado correctamente.' });
         },
         error: (error) => {
