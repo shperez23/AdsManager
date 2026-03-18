@@ -18,7 +18,6 @@ export interface AdAccountsQueryParams extends PaginationQueryParams {
 
 export interface AdsQueryParams extends PaginationQueryParams {
   CampaignId?: string;
-  AdSetId?: string;
 }
 
 export interface AdSetsQueryParams extends PaginationQueryParams {
@@ -75,6 +74,7 @@ export interface Campaign {
   status: string;
   objective?: string;
   dailyBudget?: number;
+  lifetimeBudget?: number;
   startDate?: string;
   endDate?: string;
   createdAt?: string;
@@ -98,10 +98,13 @@ export interface AdSet {
   name: string;
   status: string;
   dailyBudget?: number;
+  budget?: number;
   billingEvent?: string;
   optimizationGoal?: string;
   targetingJson?: string;
   bidStrategy?: string;
+  startDate?: string;
+  endDate?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -147,20 +150,20 @@ export interface UpdateAdSetRequest {
 export interface CreateCampaignRequest {
   adAccountId: string;
   name: string;
-  status?: string;
-  objective?: string;
-  dailyBudget?: number;
-  startDate?: string;
-  endDate?: string;
+  objective?: string | null;
+  status?: string | null;
+  dailyBudget?: number | null;
+  lifetimeBudget?: number | null;
 }
 
 export interface UpdateCampaignRequest {
-  name?: string;
-  status?: string;
-  objective?: string;
-  dailyBudget?: number;
-  startDate?: string;
-  endDate?: string;
+  name?: string | null;
+  objective?: string | null;
+  status?: string | null;
+  dailyBudget?: number | null;
+  lifetimeBudget?: number | null;
+  startDate?: string | null;
+  endDate?: string | null;
 }
 
 export interface LoginRequest {

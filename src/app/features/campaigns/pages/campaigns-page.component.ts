@@ -19,6 +19,7 @@ import { CampaignsListComponent } from '../components/campaigns-list/campaigns-l
 export class CampaignsPageComponent {
   selectedCampaign: Campaign | null = null;
   isSubmitting = false;
+  reloadKey = 0;
 
   private readonly destroyRef = inject(DestroyRef);
 
@@ -47,6 +48,7 @@ export class CampaignsPageComponent {
       .subscribe({
         next: () => {
           this.selectedCampaign = null;
+          this.reloadKey += 1;
           this.toastService.success({ title: 'Campaigns', message: 'Operación completada.' });
         },
         error: (error) => {
