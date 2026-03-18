@@ -1,5 +1,5 @@
 import { Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
 import { AuthService } from '../../api/services/auth.service';
 import { ToastService } from '../../notifications/toast.service';
@@ -52,6 +52,26 @@ describe('AuthSessionService', () => {
     });
 
     expect(currentUserEmail).toBe('sergio@example.com');
+    expect(service.accessToken).toBe('opaque-token');
+    expect(service.hasValidAccessToken(0)).toBeTrue();
+  });
+
+  it('should keep the session and return a fallback user when loading the profile fails after login', () => {
+    authApi.login.and.returnValue(
+      of({
+        accessToken: 'opaque-token',
+        refreshToken: 'refresh-token',
+      }),
+    );
+    authApi.me.and.returnValue(throwError(() => new Error('Profile endpoint unavailable')));
+
+    let authenticatedUserEmail: string | undefined;
+
+    service.login({ email: 'sergio@example.com', password: 'secret123' }).subscribe((user) => {
+      authenticatedUserEmail = user.email;
+    });
+
+    expect(authenticatedUserEmail).toBe('sergio@example.com');
     expect(service.accessToken).toBe('opaque-token');
     expect(service.hasValidAccessToken(0)).toBeTrue();
   });
