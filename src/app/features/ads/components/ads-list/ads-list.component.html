@@ -2,13 +2,21 @@
   <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
     <h2 class="text-lg font-semibold text-slate-900">Ads</h2>
 
-    <div class="grid gap-2 sm:grid-cols-3">
+    <div class="grid gap-2 md:grid-cols-2 xl:grid-cols-5">
       <input
         type="search"
         class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
         placeholder="Buscar por nombre"
         [ngModel]="searchTerm"
         (ngModelChange)="onSearchChange($event)"
+      />
+
+      <input
+        type="search"
+        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+        placeholder="Filtrar por Campaign ID"
+        [ngModel]="campaignIdFilter"
+        (ngModelChange)="onCampaignIdChange($event)"
       />
 
       <select
@@ -23,14 +31,33 @@
 
       <select
         class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-        [ngModel]="selectedPageSize"
-        (ngModelChange)="onPageSizeChange($event)"
+        [ngModel]="selectedSortBy"
+        (ngModelChange)="onSortByChange($event)"
       >
-        <option *ngFor="let size of pageSizeOptions" [value]="size">
-          {{ size }} por página
-        </option>
+        <option *ngFor="let option of sortFieldOptions" [value]="option.value">{{ option.label }}</option>
+      </select>
+
+      <select
+        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+        [ngModel]="selectedSortDirection"
+        (ngModelChange)="onSortDirectionChange($event)"
+        [disabled]="!selectedSortBy"
+      >
+        <option *ngFor="let option of sortDirectionOptions" [value]="option.value">{{ option.label }}</option>
       </select>
     </div>
+  </div>
+
+  <div class="mb-4 flex justify-end">
+    <select
+      class="w-full max-w-40 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+      [ngModel]="selectedPageSize"
+      (ngModelChange)="onPageSizeChange($event)"
+    >
+      <option *ngFor="let size of pageSizeOptions" [value]="size">
+        {{ size }} por página
+      </option>
+    </select>
   </div>
 
   <app-error-state
@@ -47,6 +74,7 @@
         <tr>
           <th class="px-4 py-3 text-left font-semibold text-slate-700">Nombre</th>
           <th class="px-4 py-3 text-left font-semibold text-slate-700">Status</th>
+          <th class="px-4 py-3 text-left font-semibold text-slate-700">Campaign</th>
           <th class="px-4 py-3 text-left font-semibold text-slate-700">Ad Set</th>
           <th class="px-4 py-3 text-left font-semibold text-slate-700">Preview URL</th>
           <th class="px-4 py-3 text-left font-semibold text-slate-700">Acciones</th>
@@ -55,13 +83,13 @@
 
       <tbody class="divide-y divide-slate-200 bg-white">
         <tr *ngIf="isLoading">
-          <td colspan="5" class="px-4 py-2">
+          <td colspan="6" class="px-4 py-2">
             <app-loading-state message="Cargando anuncios..."></app-loading-state>
           </td>
         </tr>
 
         <tr *ngIf="!isLoading && ads.length === 0">
-          <td colspan="5" class="px-4 py-2">
+          <td colspan="6" class="px-4 py-2">
             <app-empty-state></app-empty-state>
           </td>
         </tr>
@@ -82,17 +110,18 @@
               {{ ad.status }}
             </span>
           </td>
-          <td class="px-4 py-3 text-slate-700">{{ ad.adSetId || "—" }}</td>
-          <td class="px-4 py-3 text-slate-700">{{ ad.previewUrl || "—" }}</td>
+          <td class="px-4 py-3 text-slate-700">{{ ad.campaignId || '—' }}</td>
+          <td class="px-4 py-3 text-slate-700">{{ ad.adSetId || '—' }}</td>
+          <td class="px-4 py-3 text-slate-700">{{ ad.previewUrl || '—' }}</td>
           <td class="px-4 py-3">
             <div class="flex items-center gap-2">
               <button
                 type="button"
                 class="rounded-md border border-blue-300 px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
-                [disabled]="isLoading"
+                [disabled]="actionAdId === ad.id"
                 (click)="onToggleStatus(ad)"
               >
-                {{ ad.status === 'ACTIVE' ? 'Pausar' : 'Activar' }}
+                {{ actionAdId === ad.id ? 'Procesando...' : ad.status === 'ACTIVE' ? 'Pausar' : 'Activar' }}
               </button>
 
               <button
