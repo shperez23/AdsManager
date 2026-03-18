@@ -1,10 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { AuthSessionService } from '../../../core/auth/services/auth-session.service';
+import { RequestFeedbackService } from '../../../core/errors/request-feedback.service';
 import { ToastService } from '../../../core/notifications/toast.service';
 
 @Component({
@@ -16,9 +18,11 @@ import { ToastService } from '../../../core/notifications/toast.service';
 export class LoginPageComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly authSessionService = inject(AuthSessionService);
+  private readonly requestFeedbackService = inject(RequestFeedbackService);
   private readonly toastService = inject(ToastService);
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   isSubmitting = false;
 
@@ -42,7 +46,10 @@ export class LoginPageComponent {
         email: payload.email ?? '',
         password: payload.password ?? '',
       })
-      .pipe(finalize(() => (this.isSubmitting = false)))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => (this.isSubmitting = false)),
+      )
       .subscribe({
         next: () => {
           this.toastService.success({
@@ -51,11 +58,12 @@ export class LoginPageComponent {
           });
           this.router.navigateByUrl(returnUrl);
         },
-        error: () => {
-          this.toastService.error({
-            title: 'Error de autenticación',
-            message: 'No se pudo iniciar sesión. Verifica tus credenciales.',
-          });
+        error: (error) => {
+          this.requestFeedbackService.showError(
+            'Error de autenticación',
+            error,
+            'No se pudo iniciar sesión. Verifica tus credenciales.',
+          );
         },
       });
   }

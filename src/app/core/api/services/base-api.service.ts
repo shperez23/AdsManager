@@ -1,9 +1,10 @@
-import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 import { API_BASE_URL } from '../../config/api-config';
+import { normalizeApiError } from '../utils/api-error.util';
 
 export type QueryParamValue = string | number | boolean | ReadonlyArray<string | number | boolean>;
 
@@ -112,32 +113,6 @@ export class BaseApiService {
   }
 
   private handleError(error: unknown): Observable<never> {
-    if (error instanceof HttpErrorResponse) {
-      const apiError = {
-        status: error.status,
-        message: error.error?.message ?? error.message ?? 'Unexpected API error',
-        details: error.error,
-        url: error.url ?? undefined,
-      };
-
-      return throwError(() => apiError);
-    }
-
-    const mappedError = error as {
-      status?: number;
-      message?: string;
-      userMessage?: string;
-      details?: unknown;
-      url?: string;
-    };
-
-    const apiError = {
-      status: mappedError.status ?? 0,
-      message: mappedError.userMessage ?? mappedError.message ?? 'Unexpected API error',
-      details: mappedError.details ?? error,
-      url: mappedError.url,
-    };
-
-    return throwError(() => apiError);
+    return throwError(() => normalizeApiError(error));
   }
 }

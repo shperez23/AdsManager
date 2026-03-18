@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 
 import { CampaignsService } from '../../../core/api/services/campaigns.service';
+import { RequestFeedbackService } from '../../../core/errors/request-feedback.service';
 import { ToastService } from '../../../core/notifications/toast.service';
 import { Campaign, CreateCampaignRequest, UpdateCampaignRequest } from '../../../shared/models';
 import { CampaignsFormComponent, CampaignFormSubmitEvent } from '../components/campaigns-form/campaigns-form.component';
@@ -18,8 +20,11 @@ export class CampaignsPageComponent {
   selectedCampaign: Campaign | null = null;
   isSubmitting = false;
 
+  private readonly destroyRef = inject(DestroyRef);
+
   constructor(
     private readonly campaignsService: CampaignsService,
+    private readonly requestFeedbackService: RequestFeedbackService,
     private readonly toastService: ToastService,
   ) {}
 
@@ -34,12 +39,19 @@ export class CampaignsPageComponent {
       ? this.campaignsService.updateCampaign(this.selectedCampaign.id, event.value as UpdateCampaignRequest)
       : this.campaignsService.createCampaign(event.value as CreateCampaignRequest);
 
-    request$.pipe(finalize(() => (this.isSubmitting = false))).subscribe({
-      next: () => {
-        this.selectedCampaign = null;
-        this.toastService.success({ title: 'Campaigns', message: 'Operación completada.' });
-      },
-      error: () => this.toastService.error({ title: 'Campaigns', message: 'No se pudo guardar la campaign.' }),
-    });
+    request$
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => (this.isSubmitting = false)),
+      )
+      .subscribe({
+        next: () => {
+          this.selectedCampaign = null;
+          this.toastService.success({ title: 'Campaigns', message: 'Operación completada.' });
+        },
+        error: (error) => {
+          this.requestFeedbackService.showError('Campaigns', error, 'No se pudo guardar la campaign.');
+        },
+      });
   }
 }

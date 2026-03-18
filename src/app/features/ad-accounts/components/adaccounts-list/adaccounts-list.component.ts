@@ -1,14 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { Component, DestroyRef, Input, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Subject, takeUntil, debounceTime, finalize } from 'rxjs';
+import { debounceTime, finalize, Subject } from 'rxjs';
 
-import {
-  AdAccount,
-  PaginatedResponse, PaginationQueryParams, SortDirection,
-} from '../../../../shared/models';
 import { AdAccountsService } from '../../../../core/api/services/adaccounts.service';
+import { RequestFeedbackService } from '../../../../core/errors/request-feedback.service';
+import { AdAccount, AdAccountsQueryParams, PaginatedResponse, SortDirection } from '../../../../shared/models';
 import { EmptyStateComponent } from '../../../../shared/ui/states/empty-state.component';
 import { ErrorStateComponent } from '../../../../shared/ui/states/error-state.component';
 import { LoadingStateComponent } from '../../../../shared/ui/states/loading-state.component';
@@ -21,47 +20,38 @@ type SortColumn = 'name' | 'status' | 'createdAt';
   imports: [CommonModule, FormsModule, LoadingStateComponent, EmptyStateComponent, ErrorStateComponent],
   templateUrl: './adaccounts-list.component.html',
 })
-export class AdaccountsListComponent implements OnInit, OnDestroy {
+export class AdaccountsListComponent implements OnInit {
   readonly pageSizeOptions = [5, 10, 20, 50];
   readonly statusOptions = ['ALL', 'ACTIVE', 'PAUSED', 'DISABLED'];
-
   readonly sortDirection = SortDirection;
 
   adAccounts: AdAccount[] = [];
-
   searchTerm = '';
   selectedStatus = 'ALL';
   selectedPageSize = 10;
-
   currentPage = 1;
   totalPages = 1;
   totalItems = 0;
-
   sortBy: SortColumn = 'createdAt';
   currentSortDirection: SortDirection = SortDirection.Desc;
-
   isLoading = false;
   syncingAccountId: string | null = null;
   errorMessage: string | null = null;
 
   @Input() selectedAdAccountId: string | null = null;
 
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
   private readonly searchChange$ = new Subject<string>();
 
   constructor(
     private readonly adAccountsService: AdAccountsService,
+    private readonly requestFeedbackService: RequestFeedbackService,
     private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
     this.listenToSearch();
     this.loadAdAccounts();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   onSearchChange(value: string): void {
@@ -108,15 +98,18 @@ export class AdaccountsListComponent implements OnInit, OnDestroy {
     this.adAccountsService
       .syncAdAccount(account.id)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           this.syncingAccountId = null;
         }),
       )
       .subscribe({
         next: () => this.loadAdAccounts(),
-        error: () => {
-          this.errorMessage = 'No se pudo sincronizar la cuenta. Intenta de nuevo.';
+        error: (error) => {
+          this.errorMessage = this.requestFeedbackService.resolveMessage(
+            error,
+            'No se pudo sincronizar la cuenta. Intenta de nuevo.',
+          );
         },
       });
   }
@@ -146,20 +139,18 @@ export class AdaccountsListComponent implements OnInit, OnDestroy {
   }
 
   private listenToSearch(): void {
-    this.searchChange$
-      .pipe(debounceTime(300), takeUntil(this.destroy$))
-      .subscribe((term) => {
-        this.searchTerm = term;
-        this.currentPage = 1;
-        this.loadAdAccounts();
-      });
+    this.searchChange$.pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef)).subscribe((term) => {
+      this.searchTerm = term;
+      this.currentPage = 1;
+      this.loadAdAccounts();
+    });
   }
 
   private loadAdAccounts(): void {
     this.isLoading = true;
     this.errorMessage = null;
 
-    const params: PaginationQueryParams = {
+    const params: AdAccountsQueryParams = {
       Page: this.currentPage,
       PageSize: this.selectedPageSize,
       Search: this.searchTerm || undefined,
@@ -171,7 +162,7 @@ export class AdaccountsListComponent implements OnInit, OnDestroy {
     this.adAccountsService
       .getAdAccounts(params)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           this.isLoading = false;
         }),
@@ -183,8 +174,11 @@ export class AdaccountsListComponent implements OnInit, OnDestroy {
           this.totalPages = Math.max(response.totalPages, 1);
           this.totalItems = response.totalItems;
         },
-        error: () => {
-          this.errorMessage = 'No se pudieron cargar las cuentas publicitarias.';
+        error: (error) => {
+          this.errorMessage = this.requestFeedbackService.resolveMessage(
+            error,
+            'No se pudieron cargar las cuentas publicitarias.',
+          );
           this.adAccounts = [];
           this.totalItems = 0;
           this.totalPages = 1;

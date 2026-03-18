@@ -1,10 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
+import { Component, DestroyRef, EventEmitter, OnInit, Output, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, finalize, takeUntil } from 'rxjs';
+import { debounceTime, finalize, Subject } from 'rxjs';
 
-import { AdSet, PaginatedResponse, PaginationQueryParams } from '../../../../shared/models';
 import { AdSetsService } from '../../../../core/api/services/adsets.service';
+import { RequestFeedbackService } from '../../../../core/errors/request-feedback.service';
+import { AdSet, AdSetsQueryParams, PaginatedResponse } from '../../../../shared/models';
 import { EmptyStateComponent } from '../../../../shared/ui/states/empty-state.component';
 import { ErrorStateComponent } from '../../../../shared/ui/states/error-state.component';
 import { LoadingStateComponent } from '../../../../shared/ui/states/loading-state.component';
@@ -17,39 +19,34 @@ type AdSetStatusFilter = 'ALL' | 'ACTIVE' | 'PAUSED' | 'DISABLED';
   imports: [CommonModule, FormsModule, LoadingStateComponent, EmptyStateComponent, ErrorStateComponent],
   templateUrl: './adsets-list.component.html',
 })
-export class AdsetsListComponent implements OnInit, OnDestroy {
+export class AdsetsListComponent implements OnInit {
   @Output() editAdSet = new EventEmitter<AdSet>();
 
   readonly pageSizeOptions = [5, 10, 20, 50];
   readonly statusOptions: AdSetStatusFilter[] = ['ALL', 'ACTIVE', 'PAUSED', 'DISABLED'];
 
   adSets: AdSet[] = [];
-
   searchTerm = '';
   selectedStatus: AdSetStatusFilter = 'ALL';
   selectedPageSize = 10;
-
   currentPage = 1;
   totalPages = 1;
   totalItems = 0;
-
   isLoading = false;
   actionAdSetId: string | null = null;
   errorMessage: string | null = null;
 
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
   private readonly searchChange$ = new Subject<string>();
 
-  constructor(private readonly adSetsService: AdSetsService) {}
+  constructor(
+    private readonly adSetsService: AdSetsService,
+    private readonly requestFeedbackService: RequestFeedbackService,
+  ) {}
 
   ngOnInit(): void {
     this.listenToSearch();
     this.loadAdSets();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   onSearchChange(value: string): void {
@@ -91,15 +88,18 @@ export class AdsetsListComponent implements OnInit, OnDestroy {
 
     request$
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           this.actionAdSetId = null;
         }),
       )
       .subscribe({
         next: () => this.loadAdSets(),
-        error: () => {
-          this.errorMessage = 'No se pudo actualizar el estado del ad set.';
+        error: (error) => {
+          this.errorMessage = this.requestFeedbackService.resolveMessage(
+            error,
+            'No se pudo actualizar el estado del ad set.',
+          );
         },
       });
   }
@@ -117,20 +117,18 @@ export class AdsetsListComponent implements OnInit, OnDestroy {
   }
 
   private listenToSearch(): void {
-    this.searchChange$
-      .pipe(debounceTime(300), takeUntil(this.destroy$))
-      .subscribe((term) => {
-        this.searchTerm = term;
-        this.currentPage = 1;
-        this.loadAdSets();
-      });
+    this.searchChange$.pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef)).subscribe((term) => {
+      this.searchTerm = term;
+      this.currentPage = 1;
+      this.loadAdSets();
+    });
   }
 
   private loadAdSets(): void {
     this.isLoading = true;
     this.errorMessage = null;
 
-    const params: PaginationQueryParams = {
+    const params: AdSetsQueryParams = {
       Page: this.currentPage,
       PageSize: this.selectedPageSize,
       Search: this.searchTerm || undefined,
@@ -140,7 +138,7 @@ export class AdsetsListComponent implements OnInit, OnDestroy {
     this.adSetsService
       .getAdSets(params)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           this.isLoading = false;
         }),
@@ -152,8 +150,11 @@ export class AdsetsListComponent implements OnInit, OnDestroy {
           this.totalPages = Math.max(response.totalPages, 1);
           this.currentPage = response.page;
         },
-        error: () => {
-          this.errorMessage = 'No se pudieron cargar los ad sets.';
+        error: (error) => {
+          this.errorMessage = this.requestFeedbackService.resolveMessage(
+            error,
+            'No se pudieron cargar los ad sets.',
+          );
           this.adSets = [];
           this.totalItems = 0;
           this.totalPages = 1;

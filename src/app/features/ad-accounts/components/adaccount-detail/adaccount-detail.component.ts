@@ -1,11 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
-import { Subject, finalize, forkJoin, map, of, switchMap, takeUntil } from 'rxjs';
+import { Component, DestroyRef, Input, OnChanges, SimpleChanges, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { finalize, forkJoin, map, of, switchMap } from 'rxjs';
 
 import { AdAccountsService } from '../../../../core/api/services/adaccounts.service';
 import { AdsService } from '../../../../core/api/services/ads.service';
 import { AdSetsService } from '../../../../core/api/services/adsets.service';
 import { CampaignsService } from '../../../../core/api/services/campaigns.service';
+import { RequestFeedbackService } from '../../../../core/errors/request-feedback.service';
 import { Ad, AdAccount, AdSet, Campaign } from '../../../../shared/models';
 
 @Component({
@@ -14,24 +16,24 @@ import { Ad, AdAccount, AdSet, Campaign } from '../../../../shared/models';
   imports: [CommonModule],
   templateUrl: './adaccount-detail.component.html',
 })
-export class AdaccountDetailComponent implements OnChanges, OnDestroy {
+export class AdaccountDetailComponent implements OnChanges {
   @Input() adAccountId: string | null = null;
 
   adAccount: AdAccount | null = null;
   campaigns: Campaign[] = [];
   ads: Ad[] = [];
   adSets: AdSet[] = [];
-
   isLoading = false;
   errorMessage: string | null = null;
 
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
 
   constructor(
     private readonly adAccountsService: AdAccountsService,
     private readonly campaignsService: CampaignsService,
     private readonly adsService: AdsService,
     private readonly adSetsService: AdSetsService,
+    private readonly requestFeedbackService: RequestFeedbackService,
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -45,11 +47,6 @@ export class AdaccountDetailComponent implements OnChanges, OnDestroy {
     }
 
     this.loadAdAccountDetail(this.adAccountId);
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   trackByCampaign(_: number, campaign: Campaign): string {
@@ -71,7 +68,7 @@ export class AdaccountDetailComponent implements OnChanges, OnDestroy {
     this.adAccountsService
       .getAdAccounts({ Page: 1, PageSize: 100, Search: id })
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         switchMap((adAccountsResponse) => {
           const selectedAdAccount = adAccountsResponse.items.find((item) => item.id === id) ?? null;
 
@@ -130,8 +127,8 @@ export class AdaccountDetailComponent implements OnChanges, OnDestroy {
       .subscribe({
         next: ({ selectedAdAccount, campaigns, adSets, ads }) => {
           if (!selectedAdAccount) {
-            this.errorMessage = 'No se encontró el AdAccount solicitado.';
             this.resetState();
+            this.errorMessage = 'No se encontró el AdAccount solicitado.';
             return;
           }
 
@@ -140,8 +137,11 @@ export class AdaccountDetailComponent implements OnChanges, OnDestroy {
           this.adSets = adSets;
           this.ads = ads;
         },
-        error: () => {
-          this.errorMessage = 'No se pudo cargar el detalle del AdAccount.';
+        error: (error) => {
+          this.errorMessage = this.requestFeedbackService.resolveMessage(
+            error,
+            'No se pudo cargar el detalle del AdAccount.',
+          );
           this.resetState();
         },
       });

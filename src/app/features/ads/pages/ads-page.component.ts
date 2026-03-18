@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 
 import { AdsService } from '../../../core/api/services/ads.service';
+import { RequestFeedbackService } from '../../../core/errors/request-feedback.service';
 import { ToastService } from '../../../core/notifications/toast.service';
 import { Ad, CreateAdRequest, UpdateAdRequest } from '../../../shared/models';
 import { AdsFormComponent, AdsFormSubmitEvent } from '../components/ads-form/ads-form.component';
@@ -23,6 +24,7 @@ export class AdsPageComponent {
 
   constructor(
     private readonly adsService: AdsService,
+    private readonly requestFeedbackService: RequestFeedbackService,
     private readonly toastService: ToastService,
   ) {}
 
@@ -48,8 +50,8 @@ export class AdsPageComponent {
           this.selectedAd = null;
           this.toastService.success({ title: 'Ads', message: 'Registro guardado correctamente.' });
         },
-        error: () => {
-          this.toastService.error({ title: 'Ads', message: 'No se pudo guardar el ad.' });
+        error: (error) => {
+          this.requestFeedbackService.showError('Ads', error, 'No se pudo guardar el ad.');
         },
       });
   }

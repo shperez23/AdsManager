@@ -1,10 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, DestroyRef, EventEmitter, OnInit, Output, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 
 import { CampaignsService } from '../../../../core/api/services/campaigns.service';
-import { Campaign } from '../../../../shared/models';
+import { RequestFeedbackService } from '../../../../core/errors/request-feedback.service';
+import { Campaign, CampaignsQueryParams } from '../../../../shared/models';
 
 @Component({
   selector: 'app-campaigns-list',
@@ -18,7 +20,12 @@ export class CampaignsListComponent implements OnInit {
   campaigns: Campaign[] = [];
   isLoading = false;
 
-  constructor(private readonly campaignsService: CampaignsService) {}
+  private readonly destroyRef = inject(DestroyRef);
+
+  constructor(
+    private readonly campaignsService: CampaignsService,
+    private readonly requestFeedbackService: RequestFeedbackService,
+  ) {}
 
   ngOnInit(): void {
     this.loadCampaigns();
@@ -34,14 +41,38 @@ export class CampaignsListComponent implements OnInit {
       : this.campaignsService.activateCampaign(campaign.id);
 
     this.isLoading = true;
-    request$.pipe(finalize(() => (this.isLoading = false))).subscribe({ next: () => this.loadCampaigns() });
+    request$
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => (this.isLoading = false)),
+      )
+      .subscribe({
+        next: () => this.loadCampaigns(),
+        error: (error) => {
+          this.requestFeedbackService.showError('Campaigns', error, 'No se pudo actualizar el estado de la campaign.');
+        },
+      });
   }
 
   private loadCampaigns(): void {
     this.isLoading = true;
+
+    const params: CampaignsQueryParams = { Page: 1, PageSize: 20 };
+
     this.campaignsService
-      .getCampaigns({ Page: 1, PageSize: 20 })
-      .pipe(finalize(() => (this.isLoading = false)))
-      .subscribe({ next: (response) => (this.campaigns = response.items ?? []) });
+      .getCampaigns(params)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => (this.isLoading = false)),
+      )
+      .subscribe({
+        next: (response) => {
+          this.campaigns = response.items ?? [];
+        },
+        error: (error) => {
+          this.campaigns = [];
+          this.requestFeedbackService.showError('Campaigns', error, 'No se pudieron cargar las campaigns.');
+        },
+      });
   }
 }
