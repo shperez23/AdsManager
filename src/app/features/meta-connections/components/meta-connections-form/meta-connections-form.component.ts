@@ -5,8 +5,18 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import {
   CreateMetaConnectionRequest,
   MetaConnection,
+  MetaConnectionMutationRequest,
   UpdateMetaConnectionRequest,
 } from '../../../../shared/models';
+
+interface MetaConnectionFormValue {
+  appId: string;
+  appSecret: string;
+  accessToken: string;
+  refreshToken: string;
+  tokenExpiration: string;
+  businessId: string;
+}
 
 export interface MetaConnectionFormSubmitEvent {
   mode: 'create' | 'edit';
@@ -44,14 +54,7 @@ export class MetaConnectionsFormComponent implements OnChanges {
       return;
     }
 
-    this.form.reset({
-      appId: this.connection?.appId ?? '',
-      appSecret: this.connection?.appSecret ?? '',
-      accessToken: this.connection?.accessToken ?? '',
-      refreshToken: this.connection?.refreshToken ?? '',
-      tokenExpiration: this.toDateTimeLocal(this.connection?.tokenExpiration),
-      businessId: this.connection?.businessId ?? '',
-    });
+    this.form.reset(this.createFormValue(this.connection));
   }
 
   onCancel(): void {
@@ -59,23 +62,35 @@ export class MetaConnectionsFormComponent implements OnChanges {
   }
 
   onSubmit(): void {
-    const value = this.form.getRawValue();
-    const payload = {
+    this.submitForm.emit({
+      mode: this.isEditMode ? 'edit' : 'create',
+      value: this.toRequestPayload(this.form.getRawValue()),
+    });
+  }
+
+  private createFormValue(connection: MetaConnection | null): MetaConnectionFormValue {
+    return {
+      appId: connection?.appId ?? '',
+      appSecret: connection?.appSecret ?? '',
+      accessToken: connection?.accessToken ?? '',
+      refreshToken: connection?.refreshToken ?? '',
+      tokenExpiration: this.toDateTimeLocal(connection?.tokenExpiration),
+      businessId: connection?.businessId ?? '',
+    };
+  }
+
+  private toRequestPayload(value: MetaConnectionFormValue): MetaConnectionMutationRequest {
+    return this.omitUndefined({
       appId: this.asOptional(value.appId),
       appSecret: this.asOptional(value.appSecret),
       accessToken: this.asOptional(value.accessToken),
       refreshToken: this.asOptional(value.refreshToken),
       tokenExpiration: this.asOptionalDate(value.tokenExpiration),
       businessId: this.asOptional(value.businessId),
-    };
-
-    this.submitForm.emit({
-      mode: this.isEditMode ? 'edit' : 'create',
-      value: payload,
     });
   }
 
-  private toDateTimeLocal(value?: string): string {
+  private toDateTimeLocal(value?: string | null): string {
     if (!value) {
       return '';
     }
@@ -85,7 +100,8 @@ export class MetaConnectionsFormComponent implements OnChanges {
       return '';
     }
 
-    return parsedDate.toISOString().slice(0, 16);
+    const timezoneOffsetInMilliseconds = parsedDate.getTimezoneOffset() * 60_000;
+    return new Date(parsedDate.getTime() - timezoneOffsetInMilliseconds).toISOString().slice(0, 16);
   }
 
   private asOptional(value: string): string | undefined {
@@ -94,11 +110,22 @@ export class MetaConnectionsFormComponent implements OnChanges {
   }
 
   private asOptionalDate(value: string): string | undefined {
-    if (!value) {
+    const trimmed = value.trim();
+    if (!trimmed) {
       return undefined;
     }
 
-    const parsedDate = new Date(value);
+    const parsedDate = new Date(trimmed);
     return Number.isNaN(parsedDate.getTime()) ? undefined : parsedDate.toISOString();
+  }
+
+  private omitUndefined<T extends Record<string, string | undefined>>(value: T): T {
+    return Object.entries(value).reduce((accumulator, [key, fieldValue]) => {
+      if (fieldValue !== undefined) {
+        accumulator[key as keyof T] = fieldValue as T[keyof T];
+      }
+
+      return accumulator;
+    }, {} as T);
   }
 }

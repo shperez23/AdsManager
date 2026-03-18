@@ -202,34 +202,29 @@ export interface ProblemDetails {
 
 export interface MetaConnection {
   id: string;
-  appId?: string;
-  appSecret?: string;
-  accessToken?: string;
-  refreshToken?: string;
-  tokenExpiration?: string;
-  businessId?: string;
-  status?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  appId?: string | null;
+  appSecret?: string | null;
+  accessToken?: string | null;
+  refreshToken?: string | null;
+  tokenExpiration?: string | null;
+  businessId?: string | null;
+  status?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
 }
 
-export interface CreateMetaConnectionRequest {
-  appId?: string;
-  appSecret?: string;
-  accessToken?: string;
-  refreshToken?: string;
-  tokenExpiration?: string;
-  businessId?: string;
+export interface MetaConnectionMutationRequest {
+  appId?: string | null;
+  appSecret?: string | null;
+  accessToken?: string | null;
+  refreshToken?: string | null;
+  tokenExpiration?: string | null;
+  businessId?: string | null;
 }
 
-export interface UpdateMetaConnectionRequest {
-  appId?: string;
-  appSecret?: string;
-  accessToken?: string;
-  refreshToken?: string;
-  tokenExpiration?: string;
-  businessId?: string;
-}
+export interface CreateMetaConnectionRequest extends MetaConnectionMutationRequest {}
+
+export interface UpdateMetaConnectionRequest extends MetaConnectionMutationRequest {}
 
 export interface MetaCampaignCreateRequest {
   adAccountId: string;
