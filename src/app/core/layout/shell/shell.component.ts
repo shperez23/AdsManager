@@ -29,6 +29,11 @@ export class ShellComponent {
     { label: 'Insights', route: '/insights', icon: '📊' },
     { label: 'Reports', route: '/reports', icon: '📈' },
     { label: 'Meta Connections', route: '/meta-connections', icon: '🔗' },
+    { label: 'Meta Ops', route: '/meta/operations', icon: '🧩' },
+    { label: 'Meta Campaigns', route: '/meta/campaigns', icon: '🚀' },
+    { label: 'Meta AdSets', route: '/meta/adsets', icon: '🧱' },
+    { label: 'Meta Ads', route: '/meta/ads', icon: '🎨' },
+    { label: 'Meta Insights', route: '/meta/insights', icon: '📡' },
     { label: 'Rules', route: '/rules', icon: '⚙️' },
   ];
 

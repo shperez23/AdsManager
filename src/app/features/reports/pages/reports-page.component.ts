@@ -22,6 +22,7 @@ import { EmptyStateComponent } from '../../../shared/ui/states/empty-state.compo
 import { ErrorStateComponent } from '../../../shared/ui/states/error-state.component';
 import { LoadingStateComponent } from '../../../shared/ui/states/loading-state.component';
 import { createDefaultDateRange } from '../../../shared/utils/insights.util';
+import { ReportsDashboardSectionComponent } from '../components/reports-dashboard-section/reports-dashboard-section.component';
 
 type ReportSortColumn = 'dateStart' | 'impressions' | 'clicks' | 'spend' | 'ctr' | 'cpc' | 'cpm';
 
@@ -37,6 +38,7 @@ type ReportSortColumn = 'dateStart' | 'impressions' | 'clicks' | 'spend' | 'ctr'
     EmptyStateComponent,
     ErrorStateComponent,
     LoadingStateComponent,
+    ReportsDashboardSectionComponent,
   ],
   templateUrl: './reports-page.component.html',
 })

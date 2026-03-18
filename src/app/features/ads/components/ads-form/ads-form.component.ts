@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { Ad, CreateAdRequest, UpdateAdRequest } from '../../../../shared/models';
+import { Ad, AdSet, CreateAdRequest, UpdateAdRequest } from '../../../../shared/models';
 
 type AdStatus = 'ACTIVE' | 'PAUSED' | 'DISABLED';
 
@@ -27,8 +27,12 @@ type AdsFormGroup = FormGroup<{
 })
 export class AdsFormComponent implements OnChanges {
   @Input() ad: Ad | null = null;
+  @Input() adSetOptions: AdSet[] = [];
+  @Input() isLoadingAd = false;
+  @Input() isLoadingAdSetOptions = false;
   @Input() isSubmitting = false;
 
+  @Output() cancelEdit = new EventEmitter<void>();
   @Output() submitForm = new EventEmitter<AdsFormSubmitEvent>();
 
   readonly statusOptions: AdStatus[] = ['ACTIVE', 'PAUSED', 'DISABLED'];
@@ -82,7 +86,7 @@ export class AdsFormComponent implements OnChanges {
   }
 
   onSubmit(): void {
-    if (this.adsForm.invalid) {
+    if (this.adsForm.invalid || this.isLoadingAd) {
       this.adsForm.markAllAsTouched();
       return;
     }
@@ -93,7 +97,7 @@ export class AdsFormComponent implements OnChanges {
       mode: this.isEditMode ? 'edit' : 'create',
       value: this.isEditMode
         ? {
-            name: value.name,
+            name: value.name.trim(),
             status: value.status,
             creativeJson: value.creativeJson || undefined,
             previewUrl: value.previewUrl || undefined,

@@ -2,12 +2,17 @@ import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 
 import {
+  DashboardQueryParams,
   DashboardSummary,
   InsightsReportQueryParams,
   InsightsReportResponse,
 } from '../../../shared/models';
+import { normalizeDashboardSummary } from '../../../shared/utils/dashboard.util';
 import { normalizeInsightsReportResponse } from '../../../shared/utils/insights.util';
-import { mapInsightsReportQueryParams } from '../mappers/query-params.mapper';
+import {
+  mapDashboardQueryParams,
+  mapInsightsReportQueryParams,
+} from '../mappers/query-params.mapper';
 import {
   mapDashboardSummaryDtoToViewModel,
   mapInsightsReportResponseDtoToViewModel,
@@ -29,11 +34,14 @@ export class ReportsService {
       );
   }
 
-  getDashboardReport(dateFrom?: string, dateTo?: string): Observable<DashboardSummary> {
+  getDashboardReport(params?: DashboardQueryParams): Observable<DashboardSummary> {
     return this.baseApiService
-      .get<DashboardSummary>(`${this.endpoint}/dashboard`, {
-        params: { dateFrom, dateTo },
+      .get<unknown>(`${this.endpoint}/dashboard`, {
+        params: mapDashboardQueryParams(params),
       })
-      .pipe(map(mapDashboardSummaryDtoToViewModel));
+      .pipe(
+        map((response) => normalizeDashboardSummary(response)),
+        map(mapDashboardSummaryDtoToViewModel),
+      );
   }
 }

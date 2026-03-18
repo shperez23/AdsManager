@@ -255,6 +255,37 @@ export interface MetaCampaignStatusUpdateRequest {
   status: string;
 }
 
+export interface MetaCampaign {
+  id: string;
+  adAccountId?: string;
+  name: string;
+  status: string;
+  objective?: string;
+  dailyBudget?: number;
+  lifetimeBudget?: number;
+}
+
+export interface MetaAdSet {
+  id: string;
+  adAccountId?: string;
+  campaignId?: string;
+  name: string;
+  status: string;
+  dailyBudget?: number;
+  billingEvent?: string;
+  optimizationGoal?: string;
+  targetingJson?: string;
+}
+
+export interface MetaAd {
+  id: string;
+  adSetId?: string;
+  name: string;
+  status: string;
+  creativeJson?: string;
+  previewUrl?: string;
+}
+
 export enum RuleOperator {
   GreaterThan = 1,
   LessThan = 2,

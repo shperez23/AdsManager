@@ -5,8 +5,11 @@ import {
   AdAccount,
   CreateMetaConnectionRequest,
   InsightsResponse,
+  MetaAd,
   MetaAdCreateRequest,
+  MetaAdSet,
   MetaAdSetCreateRequest,
+  MetaCampaign,
   MetaCampaignCreateRequest,
   MetaCampaignStatusUpdateRequest,
   MetaConnection,
@@ -14,7 +17,13 @@ import {
   UpdateMetaConnectionRequest,
 } from '../../../shared/models';
 import { normalizeInsightsResponse } from '../../../shared/utils/insights.util';
-import { mapMetaConnectionDtoToViewModel } from '../mappers/resource-view-model.mapper';
+import {
+  mapAdAccountDtoToViewModel,
+  mapMetaAdDtoToViewModel,
+  mapMetaAdSetDtoToViewModel,
+  mapMetaCampaignDtoToViewModel,
+  mapMetaConnectionDtoToViewModel,
+} from '../mappers/resource-view-model.mapper';
 import { BaseApiService } from './base-api.service';
 
 @Injectable({ providedIn: 'root' })
@@ -24,7 +33,9 @@ export class MetaService {
   constructor(private readonly baseApiService: BaseApiService) {}
 
   getMetaAdAccounts(): Observable<AdAccount[]> {
-    return this.baseApiService.get<AdAccount[]>(`${this.endpoint}/ad-accounts`);
+    return this.baseApiService
+      .get<unknown>(`${this.endpoint}/ad-accounts`)
+      .pipe(map((response) => normalizeCollection(response).map(mapAdAccountDtoToViewModel)));
   }
 
   getMetaAdAccountInsights(
@@ -40,17 +51,22 @@ export class MetaService {
       .pipe(map((response) => normalizeInsightsResponse(response)));
   }
 
-  getMetaCampaigns(adAccountId: string): Observable<unknown[]> {
-    return this.baseApiService.get<unknown[]>(
-      `${this.endpoint}/ad-accounts/${adAccountId}/campaigns`,
-    );
+  getMetaCampaigns(adAccountId: string): Observable<MetaCampaign[]> {
+    return this.baseApiService
+      .get<unknown>(`${this.endpoint}/ad-accounts/${adAccountId}/campaigns`)
+      .pipe(map((response) => normalizeCollection(response).map(mapMetaCampaignDtoToViewModel)));
   }
 
-  createMetaCampaign(adAccountId: string, payload: MetaCampaignCreateRequest): Observable<unknown> {
-    return this.baseApiService.post<unknown, MetaCampaignCreateRequest>(
-      `${this.endpoint}/ad-accounts/${adAccountId}/campaigns`,
-      payload,
-    );
+  createMetaCampaign(
+    adAccountId: string,
+    payload: MetaCampaignCreateRequest,
+  ): Observable<MetaCampaign> {
+    return this.baseApiService
+      .post<
+        unknown,
+        MetaCampaignCreateRequest
+      >(`${this.endpoint}/ad-accounts/${adAccountId}/campaigns`, payload)
+      .pipe(map((response) => mapMetaCampaignDtoToViewModel(normalizeEntity(response))));
   }
 
   updateMetaCampaignStatus(payload: MetaCampaignStatusUpdateRequest): Observable<void> {
@@ -60,21 +76,29 @@ export class MetaService {
     );
   }
 
-  createMetaAdSet(adAccountId: string, payload: MetaAdSetCreateRequest): Observable<unknown> {
-    return this.baseApiService.post<unknown, MetaAdSetCreateRequest>(
-      `${this.endpoint}/ad-accounts/${adAccountId}/adsets`,
-      payload,
-    );
+  createMetaAdSet(adAccountId: string, payload: MetaAdSetCreateRequest): Observable<MetaAdSet> {
+    return this.baseApiService
+      .post<
+        unknown,
+        MetaAdSetCreateRequest
+      >(`${this.endpoint}/ad-accounts/${adAccountId}/adsets`, payload)
+      .pipe(map((response) => mapMetaAdSetDtoToViewModel(normalizeEntity(response))));
   }
 
-  createMetaAd(payload: MetaAdCreateRequest): Observable<unknown> {
-    return this.baseApiService.post<unknown, MetaAdCreateRequest>(`${this.endpoint}/ads`, payload);
+  createMetaAd(payload: MetaAdCreateRequest): Observable<MetaAd> {
+    return this.baseApiService
+      .post<unknown, MetaAdCreateRequest>(`${this.endpoint}/ads`, payload)
+      .pipe(map((response) => mapMetaAdDtoToViewModel(normalizeEntity(response))));
   }
 
   getConnections(): Observable<MetaConnection[]> {
     return this.baseApiService
       .get<unknown>(`${this.endpoint}/connections`)
-      .pipe(map((response) => normalizeMetaConnectionsResponse(response).map(mapMetaConnectionDtoToViewModel)));
+      .pipe(
+        map((response) =>
+          normalizeMetaConnectionsResponse(response).map(mapMetaConnectionDtoToViewModel),
+        ),
+      );
   }
 
   createConnection(payload: CreateMetaConnectionRequest): Observable<MetaConnection> {
@@ -83,7 +107,11 @@ export class MetaService {
         unknown,
         CreateMetaConnectionRequest
       >(`${this.endpoint}/connections`, this.sanitizeConnectionPayload(payload))
-      .pipe(map((response) => mapMetaConnectionDtoToViewModel(normalizeMetaConnectionResponse(response))));
+      .pipe(
+        map((response) =>
+          mapMetaConnectionDtoToViewModel(normalizeMetaConnectionResponse(response)),
+        ),
+      );
   }
 
   updateConnection(id: string, payload: UpdateMetaConnectionRequest): Observable<MetaConnection> {
@@ -92,7 +120,11 @@ export class MetaService {
         unknown,
         UpdateMetaConnectionRequest
       >(`${this.endpoint}/connections/${id}`, this.sanitizeConnectionPayload(payload))
-      .pipe(map((response) => mapMetaConnectionDtoToViewModel(normalizeMetaConnectionResponse(response))));
+      .pipe(
+        map((response) =>
+          mapMetaConnectionDtoToViewModel(normalizeMetaConnectionResponse(response)),
+        ),
+      );
   }
 
   deleteConnection(id: string): Observable<void> {
@@ -126,9 +158,9 @@ export class MetaService {
 
 type UnknownRecord = Record<string, unknown>;
 
-function normalizeMetaConnectionsResponse(response: unknown): MetaConnection[] {
+function normalizeCollection(response: unknown): UnknownRecord[] {
   if (Array.isArray(response)) {
-    return response.filter(isRecord).map(toMetaConnection);
+    return response.filter(isRecord);
   }
 
   if (!isRecord(response)) {
@@ -139,21 +171,27 @@ function normalizeMetaConnectionsResponse(response: unknown): MetaConnection[] {
     .map((key) => response[key])
     .find((candidate) => Array.isArray(candidate));
 
-  return Array.isArray(wrappedCollection)
-    ? wrappedCollection.filter(isRecord).map(toMetaConnection)
-    : [];
+  return Array.isArray(wrappedCollection) ? wrappedCollection.filter(isRecord) : [];
+}
+
+function normalizeEntity(response: unknown): UnknownRecord {
+  if (!isRecord(response)) {
+    return {};
+  }
+
+  const wrappedEntity = ['data', 'result', 'value', 'payload']
+    .map((key) => response[key])
+    .find((candidate) => isRecord(candidate));
+
+  return isRecord(wrappedEntity) ? wrappedEntity : response;
+}
+
+function normalizeMetaConnectionsResponse(response: unknown): MetaConnection[] {
+  return normalizeCollection(response).map(toMetaConnection);
 }
 
 function normalizeMetaConnectionResponse(response: unknown): MetaConnection {
-  if (isRecord(response)) {
-    const wrappedConnection = ['data', 'result', 'value', 'payload']
-      .map((key) => response[key])
-      .find((candidate) => isRecord(candidate));
-
-    return isRecord(wrappedConnection) ? toMetaConnection(wrappedConnection) : toMetaConnection(response);
-  }
-
-  return { id: '' };
+  return toMetaConnection(normalizeEntity(response));
 }
 
 function isRecord(value: unknown): value is UnknownRecord {
