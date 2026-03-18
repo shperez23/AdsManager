@@ -1,4 +1,4 @@
-import { InsightMetrics, InsightsResponse } from '../models';
+import { InsightMetrics, InsightsReportResponse, InsightsResponse } from '../models';
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -28,8 +28,7 @@ export function normalizeInsightsResponse(payload: unknown): InsightsResponse {
   }
 
   const source = payload as UnknownRecord;
-  const rowsRaw = source['rows'] ?? source['Rows'] ?? source['data'] ?? source['Data'];
-  const rows = Array.isArray(rowsRaw) ? rowsRaw.map((row) => normalizeInsightMetrics(row)) : [];
+  const rows = readInsightRows(source);
 
   return {
     accountId: readString(source, 'accountId', 'AccountId'),
@@ -39,6 +38,34 @@ export function normalizeInsightsResponse(payload: unknown): InsightsResponse {
     currency: readString(source, 'currency', 'Currency'),
     rows,
   };
+}
+
+export function normalizeInsightsReportResponse(payload: unknown): InsightsReportResponse {
+  const response = normalizeInsightsResponse(payload);
+  const source = (payload ?? {}) as UnknownRecord;
+  const totalItems = readNumber(source, 'totalItems', 'TotalItems', 'count', 'Count');
+  const pageSize = Math.max(readNumber(source, 'pageSize', 'PageSize', 'limit', 'Limit'), response.rows.length || 20);
+  const page = Math.max(readNumber(source, 'page', 'Page', 'currentPage', 'CurrentPage'), 1);
+  const computedTotalItems = totalItems || response.rows.length;
+  const totalPages = Math.max(
+    readNumber(source, 'totalPages', 'TotalPages') || Math.ceil(computedTotalItems / Math.max(pageSize, 1)),
+    1,
+  );
+
+  return {
+    ...response,
+    page,
+    pageSize,
+    totalItems: computedTotalItems,
+    totalPages,
+    hasNext: readBoolean(source, 'hasNext', 'HasNext') ?? page < totalPages,
+    hasPrevious: readBoolean(source, 'hasPrevious', 'HasPrevious') ?? page > 1,
+  };
+}
+
+function readInsightRows(source: UnknownRecord): InsightMetrics[] {
+  const rowsRaw = source['rows'] ?? source['Rows'] ?? source['items'] ?? source['Items'] ?? source['data'] ?? source['Data'];
+  return Array.isArray(rowsRaw) ? rowsRaw.map((row) => normalizeInsightMetrics(row)) : [];
 }
 
 function normalizeInsightMetrics(row: unknown): InsightMetrics {
@@ -95,6 +122,27 @@ function readOptionalNumber(source: UnknownRecord, ...keys: string[]): number | 
       continue;
     }
     return readNumber(source, key);
+  }
+
+  return undefined;
+}
+
+function readBoolean(source: UnknownRecord, ...keys: string[]): boolean | undefined {
+  for (const key of keys) {
+    const value = source[key];
+    if (typeof value === 'boolean') {
+      return value;
+    }
+
+    if (typeof value === 'string') {
+      if (value.toLowerCase() === 'true') {
+        return true;
+      }
+
+      if (value.toLowerCase() === 'false') {
+        return false;
+      }
+    }
   }
 
   return undefined;

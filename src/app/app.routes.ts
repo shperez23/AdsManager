@@ -13,6 +13,7 @@ import { CampaignsPageComponent } from './features/campaigns/pages/campaigns-pag
 import { InsightsPageComponent } from './features/insights/pages/insights-page.component';
 import { MetaConnectionsPageComponent } from './features/meta-connections/pages/meta-connections-page.component';
 import { RulesPageComponent } from './features/rules/pages/rules-page.component';
+import { ReportsPageComponent } from './features/reports/pages/reports-page.component';
 
 export const appRoutes: Routes = [
   {
@@ -54,6 +55,10 @@ export const appRoutes: Routes = [
       {
         path: 'insights',
         component: InsightsPageComponent,
+      },
+      {
+        path: 'reports',
+        component: ReportsPageComponent,
       },
       {
         path: 'meta-connections',

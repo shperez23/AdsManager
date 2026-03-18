@@ -1,14 +1,20 @@
 <section class="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-10">
-  <div class="w-full max-w-2xl rounded-3xl border border-white/10 bg-slate-900/80 p-8 shadow-2xl shadow-slate-950/50">
+  <div
+    class="w-full max-w-2xl rounded-3xl border border-white/10 bg-slate-900/80 p-8 shadow-2xl shadow-slate-950/50"
+  >
     <div class="mb-8 text-center">
       <p class="text-xs uppercase tracking-[0.28em] text-slate-400">Ads Manager</p>
       <h1 class="mt-3 text-2xl font-semibold text-white">Crear cuenta</h1>
-      <p class="mt-2 text-sm text-slate-300">Configura tu tenant y empieza a administrar campañas.</p>
+      <p class="mt-2 text-sm text-slate-300">
+        Configura tu tenant y empieza a administrar campañas.
+      </p>
     </div>
 
     <form class="grid gap-5 md:grid-cols-2" [formGroup]="form" (ngSubmit)="onSubmit()">
       <label class="block md:col-span-2">
-        <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-300">Nombre del tenant</span>
+        <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-300"
+          >Nombre del tenant</span
+        >
         <input
           type="text"
           formControlName="tenantName"
@@ -18,17 +24,34 @@
       </label>
 
       <label class="block">
-        <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-300">Slug del tenant</span>
+        <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-300"
+          >Slug del tenant</span
+        >
         <input
           type="text"
           formControlName="tenantSlug"
+          (blur)="normalizeTenantSlug()"
           class="w-full rounded-xl border border-white/15 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-400/70"
           placeholder="acme-growth"
+          autocomplete="off"
+          spellcheck="false"
         />
+        <span class="mt-2 block text-xs text-slate-400">
+          Se genera automáticamente desde el nombre del tenant. Usa solo letras minúsculas, números
+          y guiones.
+        </span>
+        <span
+          *ngIf="form.controls.tenantSlug.touched && form.controls.tenantSlug.hasError('pattern')"
+          class="mt-2 block text-xs text-amber-300"
+        >
+          El slug debe usar solo letras minúsculas, números y guiones.
+        </span>
       </label>
 
       <label class="block">
-        <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-300">Nombre</span>
+        <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-300"
+          >Nombre</span
+        >
         <input
           type="text"
           formControlName="name"
@@ -38,7 +61,9 @@
       </label>
 
       <label class="block">
-        <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-300">Email</span>
+        <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-300"
+          >Email</span
+        >
         <input
           type="email"
           formControlName="email"
@@ -48,7 +73,9 @@
       </label>
 
       <label class="block">
-        <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-300">Contraseña</span>
+        <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-300"
+          >Contraseña</span
+        >
         <input
           type="password"
           formControlName="password"
@@ -68,7 +95,9 @@
 
     <p class="mt-6 text-center text-sm text-slate-400">
       ¿Ya tienes cuenta?
-      <a routerLink="/login" class="font-semibold text-cyan-300 hover:text-cyan-200">Iniciar sesión</a>
+      <a routerLink="/login" class="font-semibold text-cyan-300 hover:text-cyan-200"
+        >Iniciar sesión</a
+      >
     </p>
   </div>
 </section>
