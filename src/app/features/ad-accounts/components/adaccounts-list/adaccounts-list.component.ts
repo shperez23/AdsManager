@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Subject, takeUntil, debounceTime, finalize } from 'rxjs';
 
 import {
@@ -43,12 +44,15 @@ export class AdaccountsListComponent implements OnInit, OnDestroy {
   syncingAccountId: string | null = null;
   errorMessage: string | null = null;
 
-  @Output() viewDetail = new EventEmitter<AdAccount>();
+  @Input() selectedAdAccountId: string | null = null;
 
   private readonly destroy$ = new Subject<void>();
   private readonly searchChange$ = new Subject<string>();
 
-  constructor(private readonly adAccountsService: AdAccountsService) {}
+  constructor(
+    private readonly adAccountsService: AdAccountsService,
+    private readonly router: Router,
+  ) {}
 
   ngOnInit(): void {
     this.listenToSearch();
@@ -118,7 +122,7 @@ export class AdaccountsListComponent implements OnInit, OnDestroy {
   }
 
   onViewDetail(account: AdAccount): void {
-    this.viewDetail.emit(account);
+    this.router.navigate(['/ad-accounts'], { queryParams: { id: account.id } });
   }
 
   onRetry(): void {
