@@ -8,9 +8,10 @@
         <p class="text-xs text-slate-500">
           {{ campaign.id }} · {{ campaign.status }} · {{ campaign.objective || 'Sin objective' }}
         </p>
+        <p class="text-xs text-slate-500">Ad account: {{ campaign.adAccountId }}</p>
         <p class="text-xs text-slate-500">
-          Daily: {{ campaign.dailyBudget ?? 0 | currency: 'USD' : 'symbol' : '1.0-0' }} ·
-          Lifetime: {{ campaign.lifetimeBudget ?? 0 | currency: 'USD' : 'symbol' : '1.0-0' }}
+          Daily: {{ (campaign.dailyBudget ?? 0) | currency: 'USD' : 'symbol' : '1.0-0' }} ·
+          Lifetime: {{ (campaign.lifetimeBudget ?? 0) | currency: 'USD' : 'symbol' : '1.0-0' }}
         </p>
       </div>
       <div class="flex gap-2">

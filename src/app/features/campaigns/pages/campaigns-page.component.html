@@ -1,4 +1,10 @@
 <div class="space-y-4">
-  <app-campaigns-form [campaign]="selectedCampaign" [isSubmitting]="isSubmitting" (submitForm)="onSubmit($event)"></app-campaigns-form>
+  <p *ngIf="isLoadingCampaign" class="text-sm text-slate-500">Cargando campaign seleccionada...</p>
+  <app-campaigns-form
+    [campaign]="selectedCampaign"
+    [isSubmitting]="isSubmitting || isLoadingCampaign"
+    (cancelEdit)="onCancelEdit()"
+    (submitForm)="onSubmit($event)"
+  ></app-campaigns-form>
   <app-campaigns-list [reloadKey]="reloadKey" (editCampaign)="onEditCampaign($event)"></app-campaigns-list>
 </div>

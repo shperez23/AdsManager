@@ -35,7 +35,14 @@ export function mapAdSetDtoToViewModel(dto: AdSet): AdSet {
 }
 
 export function mapCampaignDtoToViewModel(dto: Campaign): Campaign {
-  return { ...dto };
+  return {
+    ...dto,
+    objective: dto.objective ?? undefined,
+    dailyBudget: normalizeOptionalNumber(dto.dailyBudget),
+    lifetimeBudget: normalizeOptionalNumber(dto.lifetimeBudget),
+    startDate: dto.startDate ?? undefined,
+    endDate: dto.endDate ?? undefined,
+  };
 }
 
 export function mapRuleDtoToViewModel(dto: Rule): Rule {
@@ -66,4 +73,8 @@ export function mapMetaConnectionDtoToViewModel(dto: MetaConnection): MetaConnec
 
 function mapInsightMetricsDtoToViewModel(dto: InsightMetrics): InsightMetrics {
   return { ...dto };
+}
+
+function normalizeOptionalNumber(value?: number | null): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
 }

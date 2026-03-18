@@ -16,6 +16,7 @@ import { finalize } from 'rxjs';
 
 import { CampaignsService } from '../../../../core/api/services/campaigns.service';
 import { RequestFeedbackService } from '../../../../core/errors/request-feedback.service';
+import { ToastService } from '../../../../core/notifications/toast.service';
 import { Campaign, CampaignsQueryParams } from '../../../../shared/models';
 
 @Component({
@@ -36,6 +37,7 @@ export class CampaignsListComponent implements OnInit, OnChanges {
   constructor(
     private readonly campaignsService: CampaignsService,
     private readonly requestFeedbackService: RequestFeedbackService,
+    private readonly toastService: ToastService,
   ) {}
 
   ngOnInit(): void {
@@ -53,7 +55,8 @@ export class CampaignsListComponent implements OnInit, OnChanges {
   }
 
   onToggleStatus(campaign: Campaign): void {
-    const request$ = campaign.status === 'ACTIVE'
+    const isActive = campaign.status === 'ACTIVE';
+    const request$ = isActive
       ? this.campaignsService.pauseCampaign(campaign.id)
       : this.campaignsService.activateCampaign(campaign.id);
 
@@ -64,7 +67,13 @@ export class CampaignsListComponent implements OnInit, OnChanges {
         finalize(() => (this.isLoading = false)),
       )
       .subscribe({
-        next: () => this.loadCampaigns(),
+        next: () => {
+          this.toastService.success({
+            title: 'Campaigns',
+            message: isActive ? 'Campaign pausada correctamente.' : 'Campaign activada correctamente.',
+          });
+          this.loadCampaigns();
+        },
         error: (error) => {
           this.requestFeedbackService.showError('Campaigns', error, 'No se pudo actualizar el estado de la campaign.');
         },

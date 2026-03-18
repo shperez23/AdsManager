@@ -16,8 +16,8 @@ type CampaignFormGroup = FormGroup<{
   name: FormControl<string>;
   objective: FormControl<string>;
   status: FormControl<CampaignStatus>;
-  dailyBudget: FormControl<number>;
-  lifetimeBudget: FormControl<number>;
+  dailyBudget: FormControl<number | null>;
+  lifetimeBudget: FormControl<number | null>;
   startDate: FormControl<string>;
   endDate: FormControl<string>;
 }>;
@@ -32,15 +32,18 @@ export class CampaignsFormComponent implements OnChanges {
   @Input() campaign: Campaign | null = null;
   @Input() isSubmitting = false;
 
+  @Output() cancelEdit = new EventEmitter<void>();
   @Output() submitForm = new EventEmitter<CampaignFormSubmitEvent>();
+
+  readonly statusOptions: CampaignStatus[] = ['ACTIVE', 'PAUSED'];
 
   readonly form: CampaignFormGroup = new FormGroup({
     adAccountId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     name: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(120)] }),
-    objective: new FormControl('', { nonNullable: true }),
-    status: new FormControl<CampaignStatus>('ACTIVE', { nonNullable: true }),
-    dailyBudget: new FormControl(0, { nonNullable: true }),
-    lifetimeBudget: new FormControl(0, { nonNullable: true }),
+    objective: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(120)] }),
+    status: new FormControl<CampaignStatus>('ACTIVE', { nonNullable: true, validators: [Validators.required] }),
+    dailyBudget: new FormControl<number | null>(null, { validators: [Validators.min(0)] }),
+    lifetimeBudget: new FormControl<number | null>(null, { validators: [Validators.min(0)] }),
     startDate: new FormControl('', { nonNullable: true }),
     endDate: new FormControl('', { nonNullable: true }),
   });
@@ -59,11 +62,15 @@ export class CampaignsFormComponent implements OnChanges {
       name: this.campaign?.name ?? '',
       objective: this.campaign?.objective ?? '',
       status: this.toCampaignStatus(this.campaign?.status),
-      dailyBudget: this.campaign?.dailyBudget ?? 0,
-      lifetimeBudget: this.campaign?.lifetimeBudget ?? 0,
+      dailyBudget: this.campaign?.dailyBudget ?? null,
+      lifetimeBudget: this.campaign?.lifetimeBudget ?? null,
       startDate: this.toDateTimeLocal(this.campaign?.startDate),
       endDate: this.toDateTimeLocal(this.campaign?.endDate),
     });
+  }
+
+  onCancel(): void {
+    this.cancelEdit.emit();
   }
 
   onSubmit(): void {
@@ -97,6 +104,11 @@ export class CampaignsFormComponent implements OnChanges {
     });
   }
 
+  hasError(controlName: keyof CampaignFormGroup['controls'], errorCode: string): boolean {
+    const control = this.form.controls[controlName];
+    return !!control && control.touched && control.hasError(errorCode);
+  }
+
   private toCampaignStatus(status?: string): CampaignStatus {
     return status === 'PAUSED' ? 'PAUSED' : 'ACTIVE';
   }
@@ -119,8 +131,8 @@ export class CampaignsFormComponent implements OnChanges {
     return trimmed.length > 0 ? trimmed : undefined;
   }
 
-  private asOptionalNumber(value: number): number | undefined {
-    return value > 0 ? value : undefined;
+  private asOptionalNumber(value: number | null): number | undefined {
+    return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
   }
 
   private asOptionalDate(value: string): string | undefined {
