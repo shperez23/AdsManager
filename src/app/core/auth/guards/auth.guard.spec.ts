@@ -1,6 +1,7 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { GuardResult, Router } from '@angular/router';
+import { firstValueFrom, Observable, of } from 'rxjs';
 
 import { AuthSessionService } from '../services/auth-session.service';
 import { authGuard } from './auth.guard';
@@ -12,7 +13,7 @@ describe('authGuard', () => {
   beforeEach(() => {
     authSessionService = jasmine.createSpyObj<AuthSessionService>(
       'AuthSessionService',
-      ['hasValidAccessToken'],
+      ['ensureAuthenticated'],
       { isBrowser: true },
     );
     router = jasmine.createSpyObj<Router>('Router', ['createUrlTree']);
@@ -34,30 +35,30 @@ describe('authGuard', () => {
     );
 
     expect(result).toBeTrue();
-    expect(authSessionService.hasValidAccessToken).not.toHaveBeenCalled();
+    expect(authSessionService.ensureAuthenticated).not.toHaveBeenCalled();
   });
 
-  it('should allow access when the token is still valid right now', () => {
-    authSessionService.hasValidAccessToken.and.returnValue(true);
+  it('should allow access when the session can be ensured', async () => {
+    authSessionService.ensureAuthenticated.and.returnValue(of(true));
 
-    const result = TestBed.runInInjectionContext(() =>
-      authGuard({} as never, { url: '/' } as never),
-    );
+    const result = TestBed.runInInjectionContext(
+      () => authGuard({} as never, { url: '/' } as never),
+    ) as Observable<GuardResult>;
 
-    expect(result).toBeTrue();
-    expect(authSessionService.hasValidAccessToken).toHaveBeenCalledOnceWith(0);
+    expect(await firstValueFrom(result)).toBeTrue();
+    expect(authSessionService.ensureAuthenticated).toHaveBeenCalledOnceWith();
   });
 
-  it('should redirect to login with the requested returnUrl when unauthenticated', () => {
+  it('should redirect to login with the requested returnUrl when unauthenticated', async () => {
     const redirectTree = {} as ReturnType<Router['createUrlTree']>;
-    authSessionService.hasValidAccessToken.and.returnValue(false);
+    authSessionService.ensureAuthenticated.and.returnValue(of(false));
     router.createUrlTree.and.returnValue(redirectTree);
 
-    const result = TestBed.runInInjectionContext(() =>
-      authGuard({} as never, { url: '/reports' } as never),
-    );
+    const result = TestBed.runInInjectionContext(
+      () => authGuard({} as never, { url: '/reports' } as never),
+    ) as Observable<GuardResult>;
 
-    expect(result).toBe(redirectTree);
+    expect(await firstValueFrom(result)).toBe(redirectTree);
     expect(router.createUrlTree).toHaveBeenCalledWith(['/login'], {
       queryParams: { returnUrl: '/reports' },
     });
