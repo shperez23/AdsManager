@@ -176,7 +176,6 @@ export interface RegisterRequest {
   name?: string;
   email: string;
   password: string;
-  fullName?: string;
 }
 
 export interface RefreshTokenRequest {
@@ -227,18 +226,21 @@ export interface CreateMetaConnectionRequest extends MetaConnectionMutationReque
 export interface UpdateMetaConnectionRequest extends MetaConnectionMutationRequest {}
 
 export interface MetaCampaignCreateRequest {
-  adAccountId: string;
-  name: string;
-  objective: string;
-  status?: string;
+  name?: string | null;
+  objective?: string | null;
+  status?: string | null;
+  dailyBudget?: number | null;
+  lifetimeBudget?: number | null;
 }
 
 export interface MetaAdSetCreateRequest {
-  adAccountId: string;
-  campaignId: string;
-  name: string;
+  name?: string | null;
+  campaignId?: string | null;
+  status?: string | null;
   dailyBudget?: number;
-  status?: string;
+  billingEvent?: string | null;
+  optimizationGoal?: string | null;
+  targetingJson?: string | null;
 }
 
 export interface MetaAdCreateRequest {
