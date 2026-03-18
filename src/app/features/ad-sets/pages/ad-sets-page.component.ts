@@ -5,6 +5,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { finalize } from 'rxjs';
 
 import { AdSetsService } from '../../../core/api/services/adsets.service';
+import { RequestFeedbackService } from '../../../core/errors/request-feedback.service';
 import { ToastService } from '../../../core/notifications/toast.service';
 import { AdSet, CreateAdSetRequest, UpdateAdSetRequest } from '../../../shared/models';
 import { AdsetsListComponent } from '../components/adsets-list/adsets-list.component';
@@ -30,6 +31,7 @@ export class AdSetsPageComponent {
 
   constructor(
     private readonly adSetsService: AdSetsService,
+    private readonly requestFeedbackService: RequestFeedbackService,
     private readonly toastService: ToastService,
   ) {}
 
@@ -66,8 +68,8 @@ export class AdSetsPageComponent {
           this.form.reset({ campaignId: '', name: '', status: 'ACTIVE', dailyBudget: 0 });
           this.toastService.success({ title: 'Ad Sets', message: 'Registro guardado correctamente.' });
         },
-        error: () => {
-          this.toastService.error({ title: 'Ad Sets', message: 'No se pudo guardar el ad set.' });
+        error: (error) => {
+          this.requestFeedbackService.showError('Ad Sets', error, 'No se pudo guardar el ad set.');
         },
       });
   }

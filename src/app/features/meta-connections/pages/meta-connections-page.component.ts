@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 
 import { MetaService } from '../../../core/api/services/meta.service';
+import { RequestFeedbackService } from '../../../core/errors/request-feedback.service';
 import { ToastService } from '../../../core/notifications/toast.service';
 import {
   CreateMetaConnectionRequest,
@@ -24,16 +26,17 @@ import { MetaConnectionsListComponent } from '../components/meta-connections-lis
 export class MetaConnectionsPageComponent implements OnInit {
   connections: MetaConnection[] = [];
   selectedConnection: MetaConnection | null = null;
-
   isLoading = false;
   isSubmitting = false;
   activeActionId: string | null = null;
-
   errorMessage: string | null = null;
   successMessage: string | null = null;
 
+  private readonly destroyRef = inject(DestroyRef);
+
   constructor(
     private readonly metaService: MetaService,
+    private readonly requestFeedbackService: RequestFeedbackService,
     private readonly toastService: ToastService,
   ) {}
 
@@ -66,21 +69,29 @@ export class MetaConnectionsPageComponent implements OnInit {
           )
         : this.metaService.createConnection(event.value as CreateMetaConnectionRequest);
 
-    request$.pipe(finalize(() => (this.isSubmitting = false))).subscribe({
-      next: () => {
-        this.successMessage =
-          event.mode === 'edit'
-            ? 'Conexión actualizada correctamente.'
-            : 'Conexión creada correctamente.';
-        this.toastService.success({ title: 'Meta Connections', message: this.successMessage });
-        this.selectedConnection = null;
-        this.loadConnections();
-      },
-      error: () => {
-        this.errorMessage = 'No fue posible guardar la conexión Meta.';
-        this.toastService.error({ title: 'Meta Connections', message: this.errorMessage });
-      },
-    });
+    request$
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => (this.isSubmitting = false)),
+      )
+      .subscribe({
+        next: () => {
+          this.successMessage =
+            event.mode === 'edit'
+              ? 'Conexión actualizada correctamente.'
+              : 'Conexión creada correctamente.';
+          this.toastService.success({ title: 'Meta Connections', message: this.successMessage });
+          this.selectedConnection = null;
+          this.loadConnections();
+        },
+        error: (error) => {
+          this.errorMessage = this.requestFeedbackService.resolveMessage(
+            error,
+            'No fue posible guardar la conexión Meta.',
+          );
+          this.toastService.error({ title: 'Meta Connections', message: this.errorMessage });
+        },
+      });
   }
 
   onDelete(connection: MetaConnection): void {
@@ -116,13 +127,19 @@ export class MetaConnectionsPageComponent implements OnInit {
 
     this.metaService
       .getConnections()
-      .pipe(finalize(() => (this.isLoading = false)))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => (this.isLoading = false)),
+      )
       .subscribe({
         next: (connections) => {
           this.connections = connections;
         },
-        error: () => {
-          this.errorMessage = 'No fue posible cargar las conexiones Meta.';
+        error: (error) => {
+          this.errorMessage = this.requestFeedbackService.resolveMessage(
+            error,
+            'No fue posible cargar las conexiones Meta.',
+          );
         },
       });
   }
@@ -131,22 +148,27 @@ export class MetaConnectionsPageComponent implements OnInit {
     connectionId: string,
     request$: ReturnType<MetaService['deleteConnection']>,
     successMessage: string,
-    errorMessage: string,
+    fallbackErrorMessage: string,
   ): void {
     this.errorMessage = null;
     this.successMessage = null;
     this.activeActionId = connectionId;
 
-    request$.pipe(finalize(() => (this.activeActionId = null))).subscribe({
-      next: () => {
-        this.successMessage = successMessage;
-        this.toastService.success({ title: 'Meta Connections', message: successMessage });
-        this.loadConnections();
-      },
-      error: () => {
-        this.errorMessage = errorMessage;
-        this.toastService.error({ title: 'Meta Connections', message: errorMessage });
-      },
-    });
+    request$
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => (this.activeActionId = null)),
+      )
+      .subscribe({
+        next: () => {
+          this.successMessage = successMessage;
+          this.toastService.success({ title: 'Meta Connections', message: successMessage });
+          this.loadConnections();
+        },
+        error: (error) => {
+          this.errorMessage = this.requestFeedbackService.resolveMessage(error, fallbackErrorMessage);
+          this.toastService.error({ title: 'Meta Connections', message: this.errorMessage });
+        },
+      });
   }
 }

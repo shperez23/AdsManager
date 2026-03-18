@@ -1,9 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 
 import { ReportsService } from '../../../../core/api/services/reports.service';
+import { RequestFeedbackService } from '../../../../core/errors/request-feedback.service';
 import { InsightMetrics } from '../../../../shared/models';
 import { createDefaultDateRange } from '../../../../shared/utils/insights.util';
 
@@ -23,11 +25,16 @@ export class InsightsSummaryComponent implements OnInit {
   isLoading = false;
   errorMessage: string | null = null;
 
+  private readonly destroyRef = inject(DestroyRef);
+
+  constructor(
+    private readonly reportsService: ReportsService,
+    private readonly requestFeedbackService: RequestFeedbackService,
+  ) {}
+
   ngOnInit(): void {
     this.load();
   }
-
-  constructor(private readonly reportsService: ReportsService) {}
 
   onApply(): void {
     if (this.startDate > this.endDate) {
@@ -48,16 +55,21 @@ export class InsightsSummaryComponent implements OnInit {
 
     this.reportsService
       .getInsightsReport({ dateFrom: this.startDate, dateTo: this.endDate, Page: 1, PageSize: 20 })
-      .pipe(finalize(() => (this.isLoading = false)))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => (this.isLoading = false)),
+      )
       .subscribe({
         next: (response) => {
           this.rows = response.rows ?? [];
         },
-        error: () => {
-          this.errorMessage = 'No se pudo cargar el reporte de insights.';
+        error: (error) => {
+          this.errorMessage = this.requestFeedbackService.resolveMessage(
+            error,
+            'No se pudo cargar el reporte de insights.',
+          );
           this.rows = [];
         },
       });
   }
-
 }

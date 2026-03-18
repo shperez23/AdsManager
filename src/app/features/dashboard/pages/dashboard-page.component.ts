@@ -1,15 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Subject, finalize, takeUntil } from 'rxjs';
+import { finalize } from 'rxjs';
 
-import {
-  DashboardQueryParams,
-  DashboardService,
-} from '../../../core/api/services/dashboard.service';
+import { DashboardService } from '../../../core/api/services/dashboard.service';
+import { RequestFeedbackService } from '../../../core/errors/request-feedback.service';
 import { ToastType } from '../../../core/notifications/toast.model';
 import { ToastService } from '../../../core/notifications/toast.service';
-import { DashboardSummary } from '../../../shared/models';
+import { DashboardQueryParams, DashboardSummary } from '../../../shared/models';
 import { EmptyStateComponent } from '../../../shared/ui/states/empty-state.component';
 import { ErrorStateComponent } from '../../../shared/ui/states/error-state.component';
 import { LoadingStateComponent } from '../../../shared/ui/states/loading-state.component';
@@ -30,7 +29,7 @@ interface ToastAction {
   imports: [CommonModule, FormsModule, LoadingStateComponent, EmptyStateComponent, ErrorStateComponent],
   templateUrl: './dashboard-page.component.html',
 })
-export class DashboardPageComponent implements OnInit, OnDestroy {
+export class DashboardPageComponent implements OnInit {
   readonly toastActions: ToastAction[] = [
     { type: 'success', label: 'Success' },
     { type: 'error', label: 'Error' },
@@ -50,20 +49,16 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
   errorMessage: string | null = null;
   dashboardSummary: DashboardSummary | null = null;
 
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
 
   constructor(
+    private readonly requestFeedbackService: RequestFeedbackService,
     private readonly toastService: ToastService,
     private readonly dashboardService: DashboardService,
   ) {}
 
   ngOnInit(): void {
     this.loadDashboard();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   get hasData(): boolean {
@@ -105,7 +100,7 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
     this.dashboardService
       .getDashboard(this.buildQueryParams())
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => (this.isLoading = false)),
       )
       .subscribe({
@@ -113,8 +108,8 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
           this.dashboardSummary = response;
           this.metrics = this.mapMetrics(response);
         },
-        error: () => {
-          this.errorMessage = 'No se pudo cargar el dashboard.';
+        error: (error) => {
+          this.errorMessage = this.requestFeedbackService.resolveMessage(error, 'No se pudo cargar el dashboard.');
           this.dashboardSummary = null;
           this.metrics = [];
           this.toastService.error({ title: 'Dashboard', message: this.errorMessage });
@@ -132,7 +127,7 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
   }
 
   private mapMetrics(response: DashboardSummary): DashboardMetric[] {
-    const metrics: DashboardMetric[] = [
+    return [
       { label: 'Spend total', value: `$${response.totalSpend.toLocaleString()}` },
       { label: 'CTR promedio', value: `${response.ctr?.toFixed(2) ?? '0.00'}%` },
       { label: 'ROAS', value: `${response.roas?.toFixed(2) ?? '0.00'}x` },
@@ -140,7 +135,5 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
       { label: 'Impresiones', value: response.totalImpressions.toLocaleString() },
       { label: 'Conversiones', value: response.totalConversions.toLocaleString() },
     ];
-
-    return metrics;
   }
 }

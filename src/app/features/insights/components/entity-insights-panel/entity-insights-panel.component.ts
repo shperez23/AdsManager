@@ -1,11 +1,23 @@
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  DestroyRef,
+  ElementRef,
+  Input,
+  OnChanges,
+  SimpleChanges,
+  ViewChild,
+  inject,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Subject, finalize, forkJoin, takeUntil } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 
 import { AdsService } from '../../../../core/api/services/ads.service';
 import { AdSetsService } from '../../../../core/api/services/adsets.service';
 import { CampaignsService } from '../../../../core/api/services/campaigns.service';
+import { RequestFeedbackService } from '../../../../core/errors/request-feedback.service';
 import { InsightMetrics } from '../../../../shared/models';
 import { createDefaultDateRange } from '../../../../shared/utils/insights.util';
 
@@ -23,7 +35,7 @@ interface InsightsEntityOption {
   imports: [CommonModule, FormsModule, CurrencyPipe],
   templateUrl: './entity-insights-panel.component.html',
 })
-export class EntityInsightsPanelComponent implements AfterViewInit, OnChanges, OnDestroy {
+export class EntityInsightsPanelComponent implements AfterViewInit, OnChanges {
   @Input({ required: true }) entityLevel: InsightsEntityLevel = 'campaigns';
 
   @ViewChild('impressionsCanvas') private impressionsCanvas?: ElementRef<HTMLCanvasElement>;
@@ -37,24 +49,23 @@ export class EntityInsightsPanelComponent implements AfterViewInit, OnChanges, O
   options: InsightsEntityOption[] = [];
   selectedEntityId = '';
   rows: InsightMetrics[] = [];
-
   isLoadingOptions = false;
   isLoadingInsights = false;
   errorMessage: string | null = null;
 
-  private readonly destroy$ = new Subject<void>();
-  private readonly renderedCanvases: HTMLCanvasElement[] = [];
+  private readonly destroyRef = inject(DestroyRef);
+  private renderedCanvases: HTMLCanvasElement[] = [];
 
   constructor(
     private readonly campaignsService: CampaignsService,
     private readonly adSetsService: AdSetsService,
     private readonly adsService: AdsService,
+    private readonly requestFeedbackService: RequestFeedbackService,
   ) {}
 
   ngAfterViewInit(): void {
     this.loadEntityOptions();
   }
-
 
   ngOnChanges(changes: SimpleChanges): void {
     if (!changes['entityLevel'] || changes['entityLevel'].firstChange || !this.impressionsCanvas) {
@@ -66,13 +77,6 @@ export class EntityInsightsPanelComponent implements AfterViewInit, OnChanges, O
     this.selectedEntityId = '';
     this.destroyCharts();
     this.loadEntityOptions();
-  }
-
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-    this.destroyCharts();
   }
 
   get entityLabel(): string {
@@ -103,7 +107,6 @@ export class EntityInsightsPanelComponent implements AfterViewInit, OnChanges, O
     return this.rows.reduce((acc, row) => acc + row.spend, 0);
   }
 
-
   get averageCtr(): number {
     if (!this.rows.length) {
       return 0;
@@ -121,7 +124,6 @@ export class EntityInsightsPanelComponent implements AfterViewInit, OnChanges, O
     const totalCpc = this.rows.reduce((acc, row) => acc + (row.cpc ?? 0), 0);
     return totalCpc / this.rows.length;
   }
-
 
   onApply(): void {
     if (this.startDate > this.endDate) {
@@ -147,7 +149,7 @@ export class EntityInsightsPanelComponent implements AfterViewInit, OnChanges, O
       ads: this.adsService.getAds({ Page: 1, PageSize: 50 }),
     })
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           this.isLoadingOptions = false;
         }),
@@ -170,8 +172,11 @@ export class EntityInsightsPanelComponent implements AfterViewInit, OnChanges, O
           this.selectedEntityId = this.options[0]?.id ?? '';
           this.loadInsights();
         },
-        error: () => {
-          this.errorMessage = `No se pudo cargar la lista de ${this.entityLabel}s.`;
+        error: (error) => {
+          this.errorMessage = this.requestFeedbackService.resolveMessage(
+            error,
+            `No se pudo cargar la lista de ${this.entityLabel}s.`,
+          );
           this.options = [];
           this.selectedEntityId = '';
         },
@@ -197,7 +202,7 @@ export class EntityInsightsPanelComponent implements AfterViewInit, OnChanges, O
 
     request$
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           this.isLoadingInsights = false;
         }),
@@ -207,8 +212,11 @@ export class EntityInsightsPanelComponent implements AfterViewInit, OnChanges, O
           this.rows = response.rows ?? [];
           this.renderCharts();
         },
-        error: () => {
-          this.errorMessage = `No se pudieron cargar los insights de ${this.entityLabel}.`;
+        error: (error) => {
+          this.errorMessage = this.requestFeedbackService.resolveMessage(
+            error,
+            `No se pudieron cargar los insights de ${this.entityLabel}.`,
+          );
           this.rows = [];
           this.destroyCharts();
         },
@@ -291,5 +299,4 @@ export class EntityInsightsPanelComponent implements AfterViewInit, OnChanges, O
       context?.clearRect(0, 0, canvas.width, canvas.height);
     });
   }
-
 }

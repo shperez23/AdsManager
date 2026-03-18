@@ -1,7 +1,12 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
-import { AdAccount, PaginatedResponse, AdAccountsQueryParams } from '../../../shared/models';
+import { AdAccount, AdAccountsQueryParams, PaginatedResponse } from '../../../shared/models';
+import { mapAdAccountsQueryParams } from '../mappers/query-params.mapper';
+import {
+  mapAdAccountDtoToViewModel,
+  mapPaginatedResponseDtoToViewModel,
+} from '../mappers/resource-view-model.mapper';
 import { BaseApiService } from './base-api.service';
 
 @Injectable({
@@ -13,7 +18,9 @@ export class AdAccountsService {
   constructor(private readonly baseApiService: BaseApiService) {}
 
   getAdAccounts(params?: AdAccountsQueryParams): Observable<PaginatedResponse<AdAccount>> {
-    return this.baseApiService.get<PaginatedResponse<AdAccount>>(this.endpoint, { params });
+    return this.baseApiService
+      .get<PaginatedResponse<AdAccount>>(this.endpoint, { params: mapAdAccountsQueryParams(params) })
+      .pipe(map((response) => mapPaginatedResponseDtoToViewModel(response, mapAdAccountDtoToViewModel)));
   }
 
   importFromMeta(): Observable<void> {

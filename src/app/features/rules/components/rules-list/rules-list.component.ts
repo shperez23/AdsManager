@@ -1,18 +1,21 @@
 import { CommonModule } from '@angular/common';
 import {
   Component,
+  DestroyRef,
   EventEmitter,
   Input,
   OnChanges,
-  OnDestroy,
   OnInit,
   Output,
   SimpleChanges,
+  inject,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, finalize, takeUntil } from 'rxjs';
+import { debounceTime, finalize, Subject } from 'rxjs';
 
 import { RulesService } from '../../../../core/api/services/rules.service';
+import { RequestFeedbackService } from '../../../../core/errors/request-feedback.service';
 import { ToastService } from '../../../../core/notifications/toast.service';
 import {
   RULE_ACTION_LABELS,
@@ -31,47 +34,37 @@ type RuleStatusFilter = 'ALL' | 'ACTIVE' | 'INACTIVE';
 @Component({
   selector: 'app-rules-list',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    LoadingStateComponent,
-    EmptyStateComponent,
-    ErrorStateComponent,
-  ],
+  imports: [CommonModule, FormsModule, LoadingStateComponent, EmptyStateComponent, ErrorStateComponent],
   templateUrl: './rules-list.component.html',
 })
-export class RulesListComponent implements OnInit, OnChanges, OnDestroy {
+export class RulesListComponent implements OnInit, OnChanges {
   @Input() reloadKey = 0;
-
   @Output() editRule = new EventEmitter<Rule>();
 
   readonly pageSizeOptions = [5, 10, 20, 50];
   readonly statusOptions: RuleStatusFilter[] = ['ALL', 'ACTIVE', 'INACTIVE'];
-
-  rules: Rule[] = [];
-
-  searchTerm = '';
-  selectedStatus: RuleStatusFilter = 'ALL';
-  selectedPageSize = 10;
-
-  currentPage = 1;
-  totalPages = 1;
-  totalItems = 0;
-
-  isLoading = false;
-  actionRuleId: string | null = null;
-  errorMessage: string | null = null;
-
   readonly entityLevelLabels = RULE_ENTITY_LEVEL_LABELS;
   readonly metricLabels = RULE_METRIC_LABELS;
   readonly operatorLabels = RULE_OPERATOR_LABELS;
   readonly actionLabels = RULE_ACTION_LABELS;
 
-  private readonly destroy$ = new Subject<void>();
+  rules: Rule[] = [];
+  searchTerm = '';
+  selectedStatus: RuleStatusFilter = 'ALL';
+  selectedPageSize = 10;
+  currentPage = 1;
+  totalPages = 1;
+  totalItems = 0;
+  isLoading = false;
+  actionRuleId: string | null = null;
+  errorMessage: string | null = null;
+
+  private readonly destroyRef = inject(DestroyRef);
   private readonly searchChange$ = new Subject<string>();
 
   constructor(
     private readonly rulesService: RulesService,
+    private readonly requestFeedbackService: RequestFeedbackService,
     private readonly toastService: ToastService,
   ) {}
 
@@ -84,11 +77,6 @@ export class RulesListComponent implements OnInit, OnChanges, OnDestroy {
     if (changes['reloadKey'] && !changes['reloadKey'].firstChange) {
       this.loadRules();
     }
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   onSearchChange(value: string): void {
@@ -130,7 +118,7 @@ export class RulesListComponent implements OnInit, OnChanges, OnDestroy {
 
     request$
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           this.actionRuleId = null;
         }),
@@ -145,8 +133,11 @@ export class RulesListComponent implements OnInit, OnChanges, OnDestroy {
           });
           this.loadRules();
         },
-        error: () => {
-          this.errorMessage = 'No se pudo actualizar el estado de la regla.';
+        error: (error) => {
+          this.errorMessage = this.requestFeedbackService.resolveMessage(
+            error,
+            'No se pudo actualizar el estado de la regla.',
+          );
           this.toastService.error({ title: 'Rules', message: this.errorMessage });
         },
       });
@@ -165,7 +156,7 @@ export class RulesListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private listenToSearch(): void {
-    this.searchChange$.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe((term) => {
+    this.searchChange$.pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef)).subscribe((term) => {
       this.searchTerm = term;
       this.currentPage = 1;
       this.loadRules();
@@ -186,7 +177,7 @@ export class RulesListComponent implements OnInit, OnChanges, OnDestroy {
     this.rulesService
       .getRules(params)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           this.isLoading = false;
         }),
@@ -198,9 +189,12 @@ export class RulesListComponent implements OnInit, OnChanges, OnDestroy {
           this.totalPages = Math.max(response.totalPages || 1, 1);
           this.totalItems = response.totalItems || this.rules.length;
         },
-        error: () => {
+        error: (error) => {
           this.rules = [];
-          this.errorMessage = 'No se pudieron cargar las reglas.';
+          this.errorMessage = this.requestFeedbackService.resolveMessage(
+            error,
+            'No se pudieron cargar las reglas.',
+          );
         },
       });
   }

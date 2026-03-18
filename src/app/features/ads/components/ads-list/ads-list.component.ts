@@ -1,14 +1,16 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
+import { Component, DestroyRef, EventEmitter, OnInit, Output, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, finalize, takeUntil } from 'rxjs';
+import { debounceTime, finalize, Subject } from 'rxjs';
 
-import { AdInsightsDashboardComponent } from '../ad-insights-dashboard/ad-insights-dashboard.component';
-import { Ad, PaginatedResponse, PaginationQueryParams } from '../../../../shared/models';
 import { AdsService } from '../../../../core/api/services/ads.service';
+import { RequestFeedbackService } from '../../../../core/errors/request-feedback.service';
+import { Ad, AdsQueryParams, PaginatedResponse } from '../../../../shared/models';
 import { EmptyStateComponent } from '../../../../shared/ui/states/empty-state.component';
 import { ErrorStateComponent } from '../../../../shared/ui/states/error-state.component';
 import { LoadingStateComponent } from '../../../../shared/ui/states/loading-state.component';
+import { AdInsightsDashboardComponent } from '../ad-insights-dashboard/ad-insights-dashboard.component';
 
 type AdStatusFilter = 'ALL' | 'ACTIVE' | 'PAUSED' | 'DISABLED';
 
@@ -25,39 +27,34 @@ type AdStatusFilter = 'ALL' | 'ACTIVE' | 'PAUSED' | 'DISABLED';
   ],
   templateUrl: './ads-list.component.html',
 })
-export class AdsListComponent implements OnInit, OnDestroy {
+export class AdsListComponent implements OnInit {
   @Output() editAd = new EventEmitter<Ad>();
 
   readonly pageSizeOptions = [5, 10, 20, 50];
   readonly statusOptions: AdStatusFilter[] = ['ALL', 'ACTIVE', 'PAUSED', 'DISABLED'];
 
   ads: Ad[] = [];
-
   searchTerm = '';
   selectedStatus: AdStatusFilter = 'ALL';
   selectedPageSize = 10;
-
   currentPage = 1;
   totalPages = 1;
   totalItems = 0;
   selectedAdId: string | null = null;
-
   isLoading = false;
   errorMessage: string | null = null;
 
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
   private readonly searchChange$ = new Subject<string>();
 
-  constructor(private readonly adsService: AdsService) {}
+  constructor(
+    private readonly adsService: AdsService,
+    private readonly requestFeedbackService: RequestFeedbackService,
+  ) {}
 
   ngOnInit(): void {
     this.listenToSearch();
     this.loadAds();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   onSearchChange(value: string): void {
@@ -99,15 +96,18 @@ export class AdsListComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     request$
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           this.isLoading = false;
         }),
       )
       .subscribe({
         next: () => this.loadAds(),
-        error: () => {
-          this.errorMessage = 'No se pudo actualizar el estado del anuncio.';
+        error: (error) => {
+          this.errorMessage = this.requestFeedbackService.resolveMessage(
+            error,
+            'No se pudo actualizar el estado del anuncio.',
+          );
         },
       });
   }
@@ -125,20 +125,18 @@ export class AdsListComponent implements OnInit, OnDestroy {
   }
 
   private listenToSearch(): void {
-    this.searchChange$
-      .pipe(debounceTime(300), takeUntil(this.destroy$))
-      .subscribe((term) => {
-        this.searchTerm = term;
-        this.currentPage = 1;
-        this.loadAds();
-      });
+    this.searchChange$.pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef)).subscribe((term) => {
+      this.searchTerm = term;
+      this.currentPage = 1;
+      this.loadAds();
+    });
   }
 
   private loadAds(): void {
     this.isLoading = true;
     this.errorMessage = null;
 
-    const params: PaginationQueryParams = {
+    const params: AdsQueryParams = {
       Page: this.currentPage,
       PageSize: this.selectedPageSize,
       Search: this.searchTerm || undefined,
@@ -148,7 +146,7 @@ export class AdsListComponent implements OnInit, OnDestroy {
     this.adsService
       .getAds(params)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           this.isLoading = false;
         }),
@@ -160,8 +158,11 @@ export class AdsListComponent implements OnInit, OnDestroy {
           this.totalPages = Math.max(response.totalPages, 1);
           this.currentPage = response.page;
         },
-        error: () => {
-          this.errorMessage = 'No se pudieron cargar los anuncios.';
+        error: (error) => {
+          this.errorMessage = this.requestFeedbackService.resolveMessage(
+            error,
+            'No se pudieron cargar los anuncios.',
+          );
           this.ads = [];
           this.totalItems = 0;
           this.totalPages = 1;

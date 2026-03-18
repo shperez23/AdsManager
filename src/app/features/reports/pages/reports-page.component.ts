@@ -1,15 +1,19 @@
 import { CommonModule, CurrencyPipe, DecimalPipe, PercentPipe } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Subject, finalize, takeUntil } from 'rxjs';
+import { finalize } from 'rxjs';
 
 import { AdAccountsService } from '../../../core/api/services/adaccounts.service';
 import { CampaignsService } from '../../../core/api/services/campaigns.service';
-import { InsightsReportQueryParams, ReportsService } from '../../../core/api/services/reports.service';
+import { ReportsService } from '../../../core/api/services/reports.service';
+import { RequestFeedbackService } from '../../../core/errors/request-feedback.service';
 import {
   AdAccount,
   Campaign,
+  CampaignsQueryParams,
   InsightMetrics,
+  InsightsReportQueryParams,
   InsightsReportResponse,
   PaginatedResponse,
   SortDirection,
@@ -36,7 +40,7 @@ type ReportSortColumn = 'dateStart' | 'impressions' | 'clicks' | 'spend' | 'ctr'
   ],
   templateUrl: './reports-page.component.html',
 })
-export class ReportsPageComponent implements OnInit, OnDestroy {
+export class ReportsPageComponent implements OnInit {
   readonly today = createDefaultDateRange(0).dateTo;
   readonly pageSizeOptions = [10, 20, 50, 100];
   readonly sortOptions: Array<{ value: ReportSortColumn; label: string }> = [
@@ -72,22 +76,18 @@ export class ReportsPageComponent implements OnInit, OnDestroy {
   isLoadingReport = false;
   errorMessage: string | null = null;
 
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
 
   constructor(
     private readonly reportsService: ReportsService,
     private readonly adAccountsService: AdAccountsService,
     private readonly campaignsService: CampaignsService,
+    private readonly requestFeedbackService: RequestFeedbackService,
   ) {}
 
   ngOnInit(): void {
     this.loadFilterOptions();
     this.loadReport();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   get rows(): InsightMetrics[] {
@@ -197,7 +197,7 @@ export class ReportsPageComponent implements OnInit, OnDestroy {
     this.adAccountsService
       .getAdAccounts({ Page: 1, PageSize: 100, SortBy: 'name', SortDirection: SortDirection.Asc })
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           this.isLoadingFilters = false;
         }),
@@ -217,16 +217,18 @@ export class ReportsPageComponent implements OnInit, OnDestroy {
   private loadCampaignOptions(): void {
     this.isLoadingFilters = true;
 
+    const params: CampaignsQueryParams = {
+      Page: 1,
+      PageSize: 100,
+      SortBy: 'name',
+      SortDirection: SortDirection.Asc,
+      AdAccountId: this.selectedAdAccountId || undefined,
+    };
+
     this.campaignsService
-      .getCampaigns({
-        Page: 1,
-        PageSize: 100,
-        SortBy: 'name',
-        SortDirection: SortDirection.Asc,
-        AdAccountId: this.selectedAdAccountId || undefined,
-      })
+      .getCampaigns(params)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           this.isLoadingFilters = false;
         }),
@@ -264,7 +266,7 @@ export class ReportsPageComponent implements OnInit, OnDestroy {
     this.reportsService
       .getInsightsReport(params)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           this.isLoadingReport = false;
         }),
@@ -274,8 +276,11 @@ export class ReportsPageComponent implements OnInit, OnDestroy {
           this.report = response;
           this.page = response.page;
         },
-        error: () => {
-          this.errorMessage = 'No se pudo cargar el reporte de insights.';
+        error: (error) => {
+          this.errorMessage = this.requestFeedbackService.resolveMessage(
+            error,
+            'No se pudo cargar el reporte de insights.',
+          );
           this.report = this.createEmptyReport();
         },
       });

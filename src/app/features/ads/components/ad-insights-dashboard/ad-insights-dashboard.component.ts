@@ -1,9 +1,11 @@
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, Input, OnDestroy, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, ElementRef, Input, ViewChild, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Subject, finalize, takeUntil } from 'rxjs';
+import { finalize } from 'rxjs';
 
 import { AdsService } from '../../../../core/api/services/ads.service';
+import { RequestFeedbackService } from '../../../../core/errors/request-feedback.service';
 import { InsightMetrics } from '../../../../shared/models';
 import { createDefaultDateRange } from '../../../../shared/utils/insights.util';
 
@@ -13,7 +15,7 @@ import { createDefaultDateRange } from '../../../../shared/utils/insights.util';
   imports: [CommonModule, FormsModule, CurrencyPipe],
   templateUrl: './ad-insights-dashboard.component.html',
 })
-export class AdInsightsDashboardComponent implements AfterViewInit, OnDestroy {
+export class AdInsightsDashboardComponent implements AfterViewInit {
   @Input({ required: true }) adId = '';
 
   @ViewChild('impressionsCanvas') private impressionsCanvas?: ElementRef<HTMLCanvasElement>;
@@ -30,21 +32,18 @@ export class AdInsightsDashboardComponent implements AfterViewInit, OnDestroy {
   isLoading = false;
   errorMessage: string | null = null;
 
+  private readonly destroyRef = inject(DestroyRef);
   private renderedCanvases: HTMLCanvasElement[] = [];
   private chartsReady = false;
-  private readonly destroy$ = new Subject<void>();
 
-  constructor(private readonly adsService: AdsService) {}
+  constructor(
+    private readonly adsService: AdsService,
+    private readonly requestFeedbackService: RequestFeedbackService,
+  ) {}
 
   ngAfterViewInit(): void {
     this.chartsReady = true;
     this.loadInsights();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-    this.destroyCharts();
   }
 
   onApplyDateRange(): void {
@@ -86,7 +85,7 @@ export class AdInsightsDashboardComponent implements AfterViewInit, OnDestroy {
     this.adsService
       .getAdInsights(this.adId, this.startDate, this.endDate)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           this.isLoading = false;
         }),
@@ -96,8 +95,11 @@ export class AdInsightsDashboardComponent implements AfterViewInit, OnDestroy {
           this.rows = response.rows ?? [];
           this.renderCharts();
         },
-        error: () => {
-          this.errorMessage = 'No se pudieron cargar los insights del anuncio.';
+        error: (error) => {
+          this.errorMessage = this.requestFeedbackService.resolveMessage(
+            error,
+            'No se pudieron cargar los insights del anuncio.',
+          );
           this.rows = [];
           this.destroyCharts();
         },
@@ -180,15 +182,10 @@ export class AdInsightsDashboardComponent implements AfterViewInit, OnDestroy {
     const drawWidth = width - horizontalPadding * 2;
     const drawHeight = height - verticalPadding * 2;
 
-    const points = config.data.map((value, index) => {
-      const x =
-        horizontalPadding +
-        (drawWidth * index) / Math.max(config.data.length - 1, 1);
-      const y =
-        verticalPadding +
-        drawHeight - ((value - minValue) / range) * drawHeight;
-      return { x, y };
-    });
+    const points = config.data.map((value, index) => ({
+      x: horizontalPadding + (drawWidth * index) / Math.max(config.data.length - 1, 1),
+      y: verticalPadding + drawHeight - ((value - minValue) / range) * drawHeight,
+    }));
 
     context.beginPath();
     context.moveTo(points[0].x, height - verticalPadding);
@@ -216,11 +213,7 @@ export class AdInsightsDashboardComponent implements AfterViewInit, OnDestroy {
   private destroyCharts(): void {
     this.renderedCanvases.forEach((canvas) => {
       const context = canvas.getContext('2d');
-      if (context) {
-        context.clearRect(0, 0, canvas.width, canvas.height);
-      }
+      context?.clearRect(0, 0, canvas.width, canvas.height);
     });
-    this.renderedCanvases = [];
   }
-
 }

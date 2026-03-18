@@ -29,6 +29,24 @@ export interface CampaignsQueryParams extends PaginationQueryParams {
   AdAccountId?: string;
 }
 
+export interface RulesQueryParams extends Omit<PaginationQueryParams, 'Status'> {
+  Status?: boolean;
+}
+
+export interface DashboardQueryParams {
+  dateFrom?: string;
+  dateTo?: string;
+  campaignId?: string;
+  adAccountId?: string;
+}
+
+export interface InsightsReportQueryParams extends PaginationQueryParams {
+  dateFrom?: string;
+  dateTo?: string;
+  adAccountId?: string;
+  campaignId?: string;
+}
+
 export interface PaginatedResponse<T> {
   items: T[];
   page: number;
@@ -315,15 +333,6 @@ export interface Rule {
   isActive: boolean;
 }
 
-export interface RulesQueryParams {
-  Page?: number;
-  PageSize?: number;
-  Search?: string;
-  Status?: boolean;
-  SortBy?: string;
-  SortDirection?: SortDirection;
-}
-
 export interface CreateRuleRequest {
   name: string;
   entityLevel: RuleEntityLevel;
@@ -342,6 +351,15 @@ export interface UpdateRuleRequest {
   threshold?: number;
   action?: RuleAction;
   isActive?: boolean;
+}
+
+export interface ApiError {
+  status: number;
+  message: string;
+  userMessage?: string;
+  details?: unknown;
+  url?: string;
+  timestamp?: string;
 }
 
 export interface DashboardSummary {
