@@ -11,7 +11,7 @@ describe('auth-form.util', () => {
     expect(slugifyTenantName('Señor Pérez Media')).toBe('senor-perez-media');
   });
 
-  it('should trim values and keep fullName aligned with name', () => {
+  it('should trim values and keep the register payload aligned with swagger', () => {
     expect(
       buildRegisterPayload({
         tenantName: ' Ads Manager API ',
@@ -24,7 +24,6 @@ describe('auth-form.util', () => {
       tenantName: 'Ads Manager API',
       tenantSlug: 'ads-manager-api',
       name: 'Sergio Perez',
-      fullName: 'Sergio Perez',
       email: 'sergio@example.com',
       password: 'secret123',
     });

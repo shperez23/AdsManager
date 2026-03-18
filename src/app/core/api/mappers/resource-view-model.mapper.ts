@@ -111,7 +111,7 @@ function normalizeOptionalDate(value?: string | null): string | undefined {
   return normalizedValue;
 }
 
-function normalizeOptionalString(value?: string | number | null): string | undefined {
+function normalizeOptionalString(value?: unknown): string | undefined {
   if (typeof value === 'number' && Number.isFinite(value)) {
     return String(value);
   }

@@ -13,6 +13,7 @@ import {
   MetaConnectionMutationRequest,
   UpdateMetaConnectionRequest,
 } from '../../../shared/models';
+import { normalizeInsightsResponse } from '../../../shared/utils/insights.util';
 import { mapMetaConnectionDtoToViewModel } from '../mappers/resource-view-model.mapper';
 import { BaseApiService } from './base-api.service';
 
@@ -30,13 +31,13 @@ export class MetaService {
     adAccountId: string,
     dateFrom?: string,
     dateTo?: string,
+    level?: string,
   ): Observable<InsightsResponse> {
-    return this.baseApiService.get<InsightsResponse>(
-      `${this.endpoint}/ad-accounts/${adAccountId}/insights`,
-      {
-        params: { dateFrom, dateTo },
-      },
-    );
+    return this.baseApiService
+      .get<unknown>(`${this.endpoint}/ad-accounts/${adAccountId}/insights`, {
+        params: { since: dateFrom, until: dateTo, level },
+      })
+      .pipe(map((response) => normalizeInsightsResponse(response)));
   }
 
   getMetaCampaigns(adAccountId: string): Observable<unknown[]> {
